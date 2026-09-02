@@ -74,8 +74,12 @@ function selos(empresa: EmpresaVinculo): string[] {
 
 export function CartaoPage() {
   const { cliente } = useClienteAuth();
-  const { empresa, semVinculo, isLoading, isError, refetch } = useEmpresaAtual();
   const [codeOpen, setCodeOpen] = useState(false);
+  // Com o QR aberto no caixa, os pontos estão prestes a cair — busca mais
+  // rápido para o "+N pontos!" surgir quase junto com a confirmação do balcão.
+  const { empresa, semVinculo, isLoading, isError, refetch } = useEmpresaAtual({
+    refetchInterval: codeOpen ? 4_000 : undefined,
+  });
   const pendente = getPendingResgate();
   const primeiroNome = cliente?.nome?.split(' ')[0];
   const { ganho, limpar } = useCelebracao(empresa?.empresaId, empresa?.saldoPontos);
@@ -84,6 +88,8 @@ export function CartaoPage() {
     queryKey: ['cliente', 'catalogo', empresa?.empresaId],
     queryFn: () => portalApi.getCatalogo(empresa!.empresaId),
     enabled: Boolean(empresa),
+    refetchOnWindowFocus: true,
+    refetchInterval: codeOpen ? 4_000 : 25_000,
   });
 
   // Prêmio mais próximo que ele ainda não alcança (o "quase lá").

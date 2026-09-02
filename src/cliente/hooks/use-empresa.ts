@@ -14,14 +14,23 @@ import type { EmpresaVinculo } from '../../types/api';
  * - Senão: usa o primeiro vínculo que existir.
  *
  * Aplica o tema da padaria assim que os dados chegam.
+ *
+ * `refetchInterval` (ms): sobrescreve o polling padrão. A tela do Cartão usa
+ * um intervalo curto enquanto o cliente está com o QR aberto no caixa, para
+ * o "+N pontos!" aparecer quase na hora em que o atendente confirma.
  */
-export function useEmpresaAtual() {
+export function useEmpresaAtual(opts?: { refetchInterval?: number }) {
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ['cliente', 'empresas'],
     queryFn: portalApi.getEmpresas,
-    staleTime: 15_000,
+    staleTime: 10_000,
+    // Mantém o saldo vivo sem o cliente precisar recarregar: volta a buscar ao
+    // reabrir o app (atendente pontuou enquanto ele olhava o caixa) e a cada
+    // ~25s com a tela visível. Em background o React Query já não dispara.
+    refetchOnWindowFocus: true,
+    refetchInterval: opts?.refetchInterval ?? 25_000,
   });
 
   const empresas = query.data ?? [];
