@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { portalApi } from '../services/portal';
 import { applyEmpresaTheme } from '../lib/theme';
+import { applyEmpresaPwaIdentity } from '../lib/pwa-identity';
 import { EMPRESA_ID } from '../lib/config';
 
 /**
@@ -19,7 +20,10 @@ export function useEmpresaTemaPublico(enabled: boolean) {
   });
 
   useEffect(() => {
-    if (query.data) applyEmpresaTheme(query.data);
+    if (query.data) {
+      applyEmpresaTheme(query.data);
+      applyEmpresaPwaIdentity(query.data);
+    }
   }, [query.data]);
 
   return { empresa: query.data, isLoading: Boolean(EMPRESA_ID) && query.isLoading };

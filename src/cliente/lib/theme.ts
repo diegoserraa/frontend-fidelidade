@@ -5,6 +5,20 @@ const DEFAULT_PRIMARY = '#059669';
 const DEFAULT_CANVAS = '#f6f7f6';
 const FG_DARK = '#18181b';
 
+/**
+ * Guarda o tema já resolvido para o script inline do index.html pré-pintar a
+ * próxima abertura sem "piscar" o verde padrão.
+ */
+const THEME_CACHE_KEY = 'fidelidade_cliente_tema';
+
+function cacheTheme(t: { brand: string; contrast: string; brand2: string; canvas: string }) {
+  try {
+    localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(t));
+  } catch {
+    /* storage indisponível — só perde a otimização anti-flash */
+  }
+}
+
 function setMetaThemeColor(color: string) {
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
 }
@@ -36,17 +50,16 @@ export function applyEmpresaTheme(empresa: Pick<
       : readableTextColor(primary);
   root.setProperty('--brand-contrast', contrast);
 
-  const secondary = normalizeHex(empresa.corSecundaria ?? '');
-  root.setProperty('--brand-2', secondary ?? primary);
+  const secondary = normalizeHex(empresa.corSecundaria ?? '') ?? primary;
+  root.setProperty('--brand-2', secondary);
 
-  const canvas = normalizeHex(empresa.corFundo ?? '');
-  if (canvas && contrastRatio(canvas, FG_DARK) >= 4.5) {
-    root.setProperty('--color-canvas', canvas);
-  } else {
-    root.setProperty('--color-canvas', DEFAULT_CANVAS);
-  }
+  const canvasCfg = normalizeHex(empresa.corFundo ?? '');
+  const canvas =
+    canvasCfg && contrastRatio(canvasCfg, FG_DARK) >= 4.5 ? canvasCfg : DEFAULT_CANVAS;
+  root.setProperty('--color-canvas', canvas);
 
   setMetaThemeColor(primary);
+  cacheTheme({ brand: primary, contrast, brand2: secondary, canvas });
 }
 
 export function resetTheme() {

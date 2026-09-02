@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { portalApi } from '../services/portal';
 import { applyEmpresaTheme } from '../lib/theme';
+import { applyEmpresaPwaIdentity } from '../lib/pwa-identity';
 import { EMPRESA_ID } from '../lib/config';
 import type { EmpresaVinculo } from '../../types/api';
 
@@ -59,7 +60,10 @@ export function useEmpresaAtual() {
   }, [query.isSuccess, configurada, entrar]);
 
   useEffect(() => {
-    if (empresa) applyEmpresaTheme(empresa);
+    if (empresa) {
+      applyEmpresaTheme(empresa);
+      applyEmpresaPwaIdentity(empresa);
+    }
   }, [empresa]);
 
   // Ainda resolvendo o auto-vínculo com a padaria configurada.

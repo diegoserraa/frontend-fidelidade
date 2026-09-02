@@ -9,6 +9,29 @@
     />
     <meta name="theme-color" content="#059669" />
     <meta name="description" content="Programa de fidelidade Fideliza+." />
+    <script>
+      /*
+       * App do cliente (/app): pré-pinta a identidade visual da padaria salva
+       * na última visita, ANTES de o React montar. Sem isto a tela abre no
+       * verde padrão e "pisca" para a cor configurada quando a API responde.
+       */
+      (function () {
+        try {
+          if (!location.pathname.startsWith('/app')) return;
+          var t = JSON.parse(localStorage.getItem('fidelidade_cliente_tema') || 'null');
+          if (!t) return;
+          var s = document.documentElement.style;
+          if (t.brand) s.setProperty('--brand', t.brand);
+          if (t.contrast) s.setProperty('--brand-contrast', t.contrast);
+          if (t.brand2) s.setProperty('--brand-2', t.brand2);
+          if (t.canvas) s.setProperty('--color-canvas', t.canvas);
+          if (t.brand) {
+            var m = document.querySelector('meta[name="theme-color"]');
+            if (m) m.setAttribute('content', t.brand);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <!-- App do cliente (PWA) no iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />

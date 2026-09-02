@@ -5,6 +5,7 @@ import { getErrorMessage } from '../../lib/errors';
 import { isValidCPF, maskCPF, maskPhoneBR, onlyDigits } from '../../lib/masks';
 import { cn } from '../../lib/utils';
 import { Field, PasswordField } from '../components/field';
+import { InstallPrompt } from '../components/install-prompt';
 import { useClienteAuth } from '../context/cliente-auth';
 
 type Modo = 'entrar' | 'criar';
@@ -165,6 +166,10 @@ export function ClienteLoginPage() {
             {submit.isPending ? 'Aguarde…' : modo === 'entrar' ? 'Entrar' : 'Criar minha conta'}
           </button>
         </form>
+
+        <div className="mx-auto mt-4 w-full max-w-sm">
+          <InstallPrompt />
+        </div>
 
         <p className="mx-auto mt-auto max-w-sm pt-8 text-center text-[12px] leading-relaxed text-fg-subtle">
           Ao continuar, você concorda que usamos seu nome e CPF para identificar sua conta e seus
