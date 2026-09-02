@@ -1,0 +1,16 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="20" y1="20" x2="136" y2="136" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7EE7B4"/>
+      <stop offset="1" stop-color="#34D399"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="48" y1="40" x2="116" y2="122" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDFEFE"/>
+      <stop offset="1" stop-color="#ECFDF5"/>
+    </linearGradient>
+  </defs>
+  <rect x="12" y="12" width="136" height="136" rx="32" fill="url(#g1)"/>
+  <path d="M48 48.5C48 41.5964 53.5964 36 60.5 36H99.5C106.404 36 112 41.5964 112 48.5V50.5C112 57.4036 106.404 63 99.5 63H81.5V111.5H97C103.904 111.5 109.5 105.904 109.5 99V95.5C109.5 88.5964 103.904 83 97 83H81.5V63H90.5C97.4036 63 103 57.4036 103 50.5V48.5C103 41.5964 97.4036 36 90.5 36H60.5C53.5964 36 48 41.5964 48 48.5Z" fill="url(#g2)"/>
+  <path d="M72 48H88.5C96.5081 48 103 54.4919 103 62.5V64.5C103 72.5081 96.5081 79 88.5 79H72V48Z" fill="#D1FAE5" opacity="0.8"/>
+  <path d="M108 122C116.837 122 124 114.837 124 106C124 97.1634 116.837 90 108 90C101.529 90 95.9099 94.3783 93.6675 100.1C96.137 101.158 98.8946 101.75 101.888 101.75C110.726 101.75 117.75 108.774 117.75 117.611C117.75 120.634 116.95 123.533 115.544 126.04C106.617 127.739 102.489 128.67 108 122Z" fill="#ECFDF5" opacity="0.9"/>
+</svg>

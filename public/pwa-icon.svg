@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Fideliza+">
+  <rect width="512" height="512" rx="120" fill="#059669"/>
+  <path
+    d="M188 156c0-11 9-20 20-20h108v46h-96v58h84v46h-84v104h-52V156Z"
+    fill="#ffffff"
+  />
+  <rect x="316" y="298" width="46" height="46" rx="10" fill="#ffffff"/>
+</svg>

@@ -1,0 +1,267 @@
+@import 'tailwindcss';
+
+/*
+ * Design system — Fideliza+
+ * Paleta neutra (zinc) + uma primária controlada (esmeralda), dirigível em
+ * tempo real pelo branding da empresa via `--brand` (ver hooks/use-theme.ts).
+ * Nada de gradientes decorativos, sombras discretas, radius e espaçamento
+ * consistentes.
+ */
+
+@theme {
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif;
+
+  /* Superfícies e texto */
+  --color-canvas: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4f4f5;
+  --color-border: #e4e4e7;
+  --color-border-strong: #d4d4d8;
+
+  --color-fg: #18181b;
+  --color-fg-muted: #52525b;
+  --color-fg-subtle: #71717a;
+  --color-fg-onprimary: #ffffff;
+
+  /* Primária — `--brand` é sobrescrita pelo branding da empresa */
+  --brand: #059669;
+  /* App do cliente: texto sobre a primária e cor secundária da empresa. */
+  --color-brand-contrast: var(--brand-contrast, #ffffff);
+  --color-brand-2: var(--brand-2, var(--brand));
+  --color-primary: var(--brand);
+  --color-primary-hover: color-mix(in srgb, var(--brand) 84%, #000);
+  --color-primary-active: color-mix(in srgb, var(--brand) 72%, #000);
+  --color-primary-subtle: color-mix(in srgb, var(--brand) 10%, #fff);
+  --color-primary-subtle-hover: color-mix(in srgb, var(--brand) 16%, #fff);
+  --color-primary-subtle-fg: color-mix(in srgb, var(--brand) 78%, #000);
+  --color-primary-border: color-mix(in srgb, var(--brand) 28%, #fff);
+
+  /* Paleta de gráficos — tons claros e suaves */
+  --color-chart-1: #34d399;
+  --color-chart-2: #60a5fa;
+  --color-chart-3: #a78bfa;
+  --color-chart-4: #fbbf24;
+  --color-chart-5: #fb7185;
+  --color-chart-6: #2dd4bf;
+
+  /* Estados semânticos */
+  --color-success: #059669;
+  --color-success-subtle: #ecfdf5;
+  --color-success-fg: #047857;
+  --color-warning: #d97706;
+  --color-warning-subtle: #fffbeb;
+  --color-warning-fg: #b45309;
+  --color-danger: #dc2626;
+  --color-danger-subtle: #fef2f2;
+  --color-danger-fg: #b91c1c;
+  --color-info: #2563eb;
+  --color-info-subtle: #eff6ff;
+  --color-info-fg: #1d4ed8;
+
+  /* Raio — controles usam md, cartões usam xl */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+
+  /* Sombras sutis */
+  --shadow-xs: 0 1px 2px 0 rgb(24 24 27 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(24 24 27 / 0.06), 0 1px 2px -1px rgb(24 24 27 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(24 24 27 / 0.08), 0 2px 6px -2px rgb(24 24 27 / 0.05);
+  --shadow-lg: 0 12px 32px -8px rgb(24 24 27 / 0.12), 0 4px 10px -4px rgb(24 24 27 / 0.06);
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-fg);
+    background-color: var(--color-canvas);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 600;
+    letter-spacing: -0.011em;
+    text-wrap: balance;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* Foco visível e consistente em toda a aplicação */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--color-primary-subtle);
+    color: var(--color-primary-subtle-fg);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--color-fg) 16%, transparent);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--color-fg) 28%, transparent);
+    background-clip: content-box;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Balcão — linha que varre o visor do leitor de QR */
+@keyframes scan-sweep {
+  0% {
+    top: 6%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  50% {
+    top: 90%;
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 6%;
+    opacity: 0;
+  }
+}
+
+/* Balcão — barra que esvazia enquanto a tela de sucesso auto-avança */
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* App do cliente — folha de código sobe pela base */
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* App do cliente — batimento suave (indicador "aguardando o caixa") */
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* App do cliente — comemoração "+N pts" */
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(6px);
+  }
+  60% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
