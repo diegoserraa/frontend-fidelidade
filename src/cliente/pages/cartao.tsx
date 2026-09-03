@@ -108,10 +108,12 @@ function selos(empresa: EmpresaVinculo): string[] {
 export function CartaoPage() {
   const { cliente } = useClienteAuth();
   const [codeOpen, setCodeOpen] = useState(false);
-  // Com o QR aberto no caixa, os pontos estão prestes a cair — busca mais
-  // rápido para o "+N pontos!" surgir quase junto com a confirmação do balcão.
+  // Cartão é a tela que o cliente deixa aberta no caixa: busca "ao vivo" (3s,
+  // ou 2s com o QR na tela — pontos prestes a cair). staleTime 0 para o
+  // refetch ao focar/voltar pro app valer sempre.
   const { empresa, semVinculo, isLoading, isError, refetch } = useEmpresaAtual({
-    refetchInterval: codeOpen ? 4_000 : undefined,
+    refetchInterval: codeOpen ? 2_000 : 3_000,
+    staleTime: 0,
   });
   const pendente = getPendingResgate();
   const primeiroNome = cliente?.nome?.split(' ')[0];
@@ -121,9 +123,28 @@ export function CartaoPage() {
     queryKey: ['cliente', 'catalogo', empresa?.empresaId],
     queryFn: () => portalApi.getCatalogo(empresa!.empresaId),
     enabled: Boolean(empresa),
+    staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: codeOpen ? 4_000 : 25_000,
+    refetchInterval: codeOpen ? 2_000 : 3_000,
   });
+
+  // Reforço ao gerenciador de foco do React Query: alguns PWAs instalados
+  // (iOS) não disparam 'focus' de forma confiável ao voltar pro app. Aqui
+  // rebuscamos na hora que a aba fica visível de novo.
+  const refetchCatalogo = catalogo.refetch;
+  useEffect(() => {
+    const aoVoltar = () => {
+      if (document.visibilityState !== 'visible') return;
+      void refetch();
+      void refetchCatalogo();
+    };
+    document.addEventListener('visibilitychange', aoVoltar);
+    window.addEventListener('focus', aoVoltar);
+    return () => {
+      document.removeEventListener('visibilitychange', aoVoltar);
+      window.removeEventListener('focus', aoVoltar);
+    };
+  }, [refetch, refetchCatalogo]);
 
   // Prêmio mais próximo que ele ainda não alcança (o "quase lá").
   const proximoPremio = useMemo<
@@ -199,11 +220,16 @@ export function CartaoPage() {
       <Screen title={primeiroNome ? `Olá, ${primeiroNome}` : 'Olá'}>
         <div className="flex flex-col gap-4">
           {ganho != null ? (
-            <div className="flex items-center gap-2.5 rounded-xl border border-success/40 bg-success-subtle px-3.5 py-2.5 motion-safe:animate-[pop-in_260ms_ease-out]">
-              <PartyPopper className="size-5 shrink-0 text-success-fg" />
-              <p className="flex-1 text-[14px] font-semibold text-success-fg">
-                Você ganhou +{num.format(ganho)} pontos!
-              </p>
+            <div className="flex items-start gap-2.5 rounded-xl border border-success/40 bg-success-subtle px-3.5 py-2.5 motion-safe:animate-[pop-in_260ms_ease-out]">
+              <PartyPopper className="mt-0.5 size-5 shrink-0 text-success-fg" />
+              <div className="flex-1">
+                <p className="text-[14px] font-semibold text-success-fg">
+                  Você ganhou +{num.format(ganho)} pontos!
+                </p>
+                <p className="text-[12px] font-medium text-success-fg/80">
+                  Novo saldo: {num.format(empresa.saldoPontos)} pontos
+                </p>
+              </div>
               <button type="button" onClick={limpar} aria-label="Fechar" className="text-success-fg/70">
                 <X className="size-4" />
               </button>
@@ -247,7 +273,10 @@ export function CartaoPage() {
 
             <div className="relative mt-4">
               <p className="text-[11px] uppercase tracking-wide opacity-75">Seus pontos</p>
-              <p className="text-[36px] font-bold leading-none tabular-nums">
+              <p
+                key={empresa.saldoPontos}
+                className="text-[36px] font-bold leading-none tabular-nums motion-safe:animate-[pop-in_360ms_ease-out]"
+              >
                 {num.format(empresa.saldoPontos)}
               </p>
             </div>
