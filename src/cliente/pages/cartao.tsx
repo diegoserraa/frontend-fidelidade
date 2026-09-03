@@ -119,6 +119,21 @@ export function CartaoPage() {
   const primeiroNome = cliente?.nome?.split(' ')[0];
   const { ganho, limpar } = useCelebracao(empresa?.empresaId, empresa?.saldoPontos);
 
+  // Saldo no instante em que o cliente abriu o QR. Quando o balcão escaneia e
+  // lança a compra, o saldo sobe (ou o vínculo nasce) — aí fecha o QR sozinho
+  // e mostra o Cartão atualizado, com o "+N pontos".
+  const saldoAoAbrir = useRef<number | null>(null);
+  const abrirCodigo = () => {
+    saldoAoAbrir.current = empresa?.saldoPontos ?? -1;
+    setCodeOpen(true);
+  };
+  useEffect(() => {
+    if (!codeOpen) return;
+    const base = saldoAoAbrir.current;
+    const atual = empresa?.saldoPontos;
+    if (base != null && atual != null && atual > base) setCodeOpen(false);
+  }, [codeOpen, empresa?.saldoPontos]);
+
   const catalogo = useQuery({
     queryKey: ['cliente', 'catalogo', empresa?.empresaId],
     queryFn: () => portalApi.getCatalogo(empresa!.empresaId),
@@ -202,7 +217,7 @@ export function CartaoPage() {
               adiciona ao programa e seus pontos começam a contar.
             </p>
           </div>
-          <CodeButton onClick={() => setCodeOpen(true)} />
+          <CodeButton onClick={abrirCodigo} />
         </div>
       </Screen>
     );
@@ -288,7 +303,7 @@ export function CartaoPage() {
             ) : null}
           </div>
 
-          <CodeButton onClick={() => setCodeOpen(true)} />
+          <CodeButton onClick={abrirCodigo} />
 
           {/* Progresso de nível */}
           <div className="rounded-xl border border-border bg-surface px-4 py-3">
