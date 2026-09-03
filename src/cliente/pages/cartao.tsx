@@ -37,28 +37,61 @@ function CodeButton({ onClick }: { onClick: () => void }) {
 }
 
 /**
- * "+N pontos!" quando o saldo subiu desde a última vez que o cliente abriu o
- * app. Compara com o valor guardado em localStorage e o atualiza.
+ * "+N pontos!" sempre que o saldo sobe — inclusive em compras seguidas
+ * enquanto o app está aberto (o polling do Cartão traz o novo saldo).
+ *
+ * `baseline` = último saldo já reconhecido para esta padaria (lembrado entre
+ * sessões no localStorage). Regras:
+ *  - primeira vez que vemos a padaria: só registra o baseline, não comemora;
+ *  - saldo > baseline: comemora a diferença e avança o baseline;
+ *  - saldo <= baseline (resgate ou leitura defasada entre polls): só ajusta o
+ *    baseline, sem zerar um banner que já está na tela — assim a próxima
+ *    compra ainda dispara "+N".
  */
 function useCelebracao(empresaId: string | undefined, saldo: number | undefined) {
   const [ganho, setGanho] = useState<number | null>(null);
-  const conferido = useRef<string | null>(null);
+  const baseline = useRef<number | null>(null);
+
+  // Troca de padaria: esquece o baseline anterior (não comparar entre empresas).
+  useEffect(() => {
+    baseline.current = null;
+    // oxlint-disable-next-line react/set-state-in-effect
+    setGanho(null);
+  }, [empresaId]);
 
   useEffect(() => {
     if (!empresaId || saldo == null) return;
-    const marca = `${empresaId}:${saldo}`;
-    if (conferido.current === marca) return;
-    conferido.current = marca;
-
     const key = `fidelidade_cliente_saldo_${empresaId}`;
-    try {
-      const anterior = Number(localStorage.getItem(key));
-      // oxlint-disable-next-line react/set-state-in-effect
-      setGanho(Number.isFinite(anterior) && saldo > anterior ? saldo - anterior : null);
-      localStorage.setItem(key, String(saldo));
-    } catch {
-      /* storage indisponível */
+
+    const persistir = (v: number) => {
+      try {
+        localStorage.setItem(key, String(v));
+      } catch {
+        /* storage indisponível — perde só a memória entre sessões */
+      }
+    };
+
+    if (baseline.current == null) {
+      let salvo: number | null = null;
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw != null && Number.isFinite(Number(raw))) salvo = Number(raw);
+      } catch {
+        /* ignore */
+      }
+      if (salvo == null) {
+        baseline.current = saldo;
+        persistir(saldo);
+        return;
+      }
+      baseline.current = salvo;
     }
+
+    if (saldo === baseline.current) return;
+    // oxlint-disable-next-line react/set-state-in-effect
+    if (saldo > baseline.current) setGanho(saldo - baseline.current);
+    baseline.current = saldo;
+    persistir(saldo);
   }, [empresaId, saldo]);
 
   return { ganho, limpar: () => setGanho(null) };
