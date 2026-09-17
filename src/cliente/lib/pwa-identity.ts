@@ -42,6 +42,25 @@ function upsertMeta(name: string): HTMLMetaElement {
   return el;
 }
 
+// Confere se a logo cadastrada no painel carrega de verdade antes de trocar o
+// ícone do app por ela — uma URL quebrada (ex.: link de imagem do Google que
+// expirou) não pode deixar o app sem ícone algum.
+function imagemCarrega(url: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const timeout = setTimeout(() => resolve(false), 5000);
+    img.onload = () => {
+      clearTimeout(timeout);
+      resolve(true);
+    };
+    img.onerror = () => {
+      clearTimeout(timeout);
+      resolve(false);
+    };
+    img.src = url;
+  });
+}
+
 /**
  * Troca, em runtime, o ícone e o nome do PWA pelos que a padaria cadastrou no
  * painel (logo + cores). Roda já na tela de login porque o sistema operacional
@@ -56,12 +75,23 @@ export function applyEmpresaPwaIdentity(src: BrandingSource): void {
   const logo = (src.logoUrl ?? '').trim();
   const nome = (src.nome ?? '').trim();
 
-  // iOS usa o apple-touch-icon no "Adicionar à Tela de Início".
-  if (logo) upsertLink('apple-touch-icon').href = logo;
   if (nome) upsertMeta('apple-mobile-web-app-title').content = nome;
+  if (!logo) return;
+
+  // Só troca o ícone (iOS e manifesto) se a logo cadastrada carregar de
+  // verdade — senão mantém o ícone padrão do build em vez de ficar sem ícone.
+  void imagemCarrega(logo).then((ok) => {
+    if (!ok || !document.head) return;
+    aplicarIcone(logo, nome, src);
+  });
+}
+
+function aplicarIcone(logo: string, nome: string, src: BrandingSource): void {
+  // iOS usa o apple-touch-icon no "Adicionar à Tela de Início".
+  upsertLink('apple-touch-icon').href = logo;
 
   const manifestLink = document.head.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-  if (!manifestLink || !logo) return;
+  if (!manifestLink) return;
 
   const brand = normalizeHex(src.corPrimaria ?? '') ?? '#059669';
   const background = normalizeHex(src.corFundo ?? '') ?? '#ffffff';

@@ -410,6 +410,7 @@ function PromocaoRowActions({
 }) {
   const toast = useToast();
   const isRascunho = promocao.status === 'rascunho';
+  const podeEnviar = promocao.status !== 'inativa';
 
   const copyId = async () => {
     try {
@@ -440,14 +441,14 @@ function PromocaoRowActions({
           Editar
         </DropdownMenuItem>
         <DropdownMenuItem
-          disabled={!isRascunho || sending}
+          disabled={!podeEnviar || sending}
           onSelect={(event) => {
             event.preventDefault();
             onSend();
           }}
         >
           <Send />
-          {sending ? 'Enviando…' : 'Enviar campanha'}
+          {sending ? 'Enviando…' : isRascunho ? 'Enviar campanha' : 'Enviar novamente'}
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => void copyId()}>
           <Copy />
