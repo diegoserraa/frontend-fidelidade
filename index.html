@@ -10,6 +10,11 @@
     <meta name="theme-color" content="#059669" />
     <meta name="description" content="Programa de fidelidade Fideliza+." />
     <style>
+      /*
+       * Fundo fixo no CSS (não no JS): assim já é o que o navegador pinta no
+       * primeiro frame possível, sem depender de nenhum script rodar antes -
+       * a única fonte de "flash de branco" que o código consegue controlar.
+       */
       #app-splash {
         display: none;
         position: fixed;
@@ -17,7 +22,7 @@
         z-index: 9999;
         align-items: center;
         justify-content: center;
-        background: #fafafa;
+        background: %VITE_EMPRESA_SPLASH_BG%;
         transition: opacity 0.25s ease;
       }
       #app-splash img {
@@ -73,16 +78,14 @@
     <div id="app-splash"><img id="app-splash-logo" alt="" /></div>
     <script>
       // Roda antes do bundle React (script deferred/module) — cobre o
-      // intervalo entre o HTML pintar e o React montar de verdade. O fundo é
-      // fixo (extraído da própria logo), não o --color-canvas do resto do
-      // app — aqui o objetivo é combinar com a logo, não com o app em uso.
+      // intervalo entre o HTML pintar e o React montar de verdade. O fundo
+      // já vem do CSS acima (fixo); aqui só falta mostrar e pôr a logo.
       (function () {
         try {
           if (!location.pathname.startsWith('/app')) return;
           var t = window.__fidelidadeTema;
           var splash = document.getElementById('app-splash');
           var logo = document.getElementById('app-splash-logo');
-          splash.style.background = '%VITE_EMPRESA_SPLASH_BG%';
           logo.src = (t && t.logo) || '%VITE_EMPRESA_LOGO_URL%';
           splash.style.display = 'flex';
           window.__splashShownAt = Date.now();
