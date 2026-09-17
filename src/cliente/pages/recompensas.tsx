@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Gift, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +19,7 @@ export function RecompensasPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const { empresa, isLoading: loadingEmpresa } = useEmpresaAtual();
+  const [resgatandoId, setResgatandoId] = useState<string | null>(null);
 
   const catalogo = useQuery({
     queryKey: ['cliente', 'catalogo', empresa?.empresaId],
@@ -28,6 +30,7 @@ export function RecompensasPage() {
   const solicitar = useMutation({
     mutationFn: (recompensa: RecompensaCliente) =>
       portalApi.solicitarResgate(empresa!.empresaId, recompensa.id),
+    onMutate: (recompensa) => setResgatandoId(recompensa.id),
     onSuccess: (res) => {
       setPendingResgate({
         resgateId: res.resgateId,
@@ -39,6 +42,7 @@ export function RecompensasPage() {
       navigate(`/app/resgate/${res.resgateId}`);
     },
     onError: (err) => toast.error('Não foi possível resgatar', getErrorMessage(err)),
+    onSettled: () => setResgatandoId(null),
   });
 
   const loading = loadingEmpresa || catalogo.isLoading;
@@ -102,7 +106,7 @@ export function RecompensasPage() {
                     disabled={solicitar.isPending}
                     onClick={() => solicitar.mutate(r)}
                   >
-                    {solicitar.isPending ? 'Aguarde…' : 'Resgatar agora'}
+                    {resgatandoId === r.id ? 'Aguarde…' : 'Resgatar agora'}
                   </Button>
                 ) : (
                   <div className="mt-3">
