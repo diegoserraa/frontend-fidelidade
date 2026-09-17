@@ -44,8 +44,18 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          navigateFallback: 'index.html',
-          globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+          // index.html NÃO entra no precache de propósito (e navigateFallback
+          // desligado: por padrão o vite-plugin-pwa registra um sempre, então
+          // precisa ser sobrescrito com `undefined` mesmo, omitir não basta).
+          // Esse HTML carrega os scripts críticos da splash (logo/cor certas
+          // desde o primeiro paint) e do ícone da aba. Se o Workbox o
+          // servisse do cache, toda vez que esse arquivo mudasse (ex.: trocar
+          // a logo) quem já tinha o app aberto ficava vendo a versão antiga
+          // até o SW notar a atualização sozinho — daí o "pisca fundo errado,
+          // depois acerta". Sem isso, a navegação sempre busca o HTML da rede
+          // (a rota da SPA já é resolvida pelo rewrite do vercel.json).
+          navigateFallback: undefined,
+          globPatterns: ['**/*.{js,css,svg,woff2}'],
           // Injeta os handlers de push/notificationclick no SW gerado pelo Workbox.
           importScripts: ['push-sw.js'],
         },
