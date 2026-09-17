@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { portalApi } from '../services/portal';
 import { applyEmpresaTheme } from '../lib/theme';
@@ -9,8 +9,11 @@ import type { EmpresaVinculo } from '../../types/api';
 /**
  * Padaria "atual" do cliente (o app assume UMA padaria).
  *
- * - `VITE_EMPRESA_ID` definido: garante que o cliente esteja no programa dessa
- *   padaria — entra automaticamente na 1ª vez (`POST /cliente/:id/entrar`).
+ * - `VITE_EMPRESA_ID`/`?empresa=` definido e o cliente ainda não tem vínculo:
+ *   `precisaConfirmarEntrada` fica true — quem chama decide como pedir a
+ *   confirmação (não entra sozinho: um cliente já logado que só passa pelo
+ *   link/QR de outra padaria não pode virar membro dela sem um toque
+ *   explícito, ver `ConfirmarEntradaScreen` em cartao.tsx).
  * - Senão: usa o primeiro vínculo que existir.
  *
  * Aplica o tema da padaria assim que os dados chegam.
@@ -41,9 +44,19 @@ export function useEmpresaAtual(opts?: { refetchInterval?: number; staleTime?: n
   const empresa: EmpresaVinculo | undefined =
     configurada ?? empresas.find((e) => e.status === 'ativo') ?? empresas[0];
 
-  const tentouEntrar = useRef(false);
+  const precisaConfirmarEntrada = Boolean(EMPRESA_ID) && query.isSuccess && !configurada;
+
+  // Branding de quem ainda não é vínculo (não vem em /cliente/empresas) — só
+  // busca quando realmente precisa mostrar a tela de confirmação.
+  const publica = useQuery({
+    queryKey: ['cliente', 'empresa-publica', EMPRESA_ID],
+    queryFn: () => portalApi.getEmpresaPublica(EMPRESA_ID as string),
+    enabled: precisaConfirmarEntrada,
+    staleTime: 60_000,
+  });
+
   const entrar = useMutation({
-    mutationFn: (id: string) => portalApi.entrarNaEmpresa(id),
+    mutationFn: () => portalApi.entrarNaEmpresa(EMPRESA_ID as string),
     onSuccess: (vinculo) => {
       if (vinculo) {
         // Aplica na hora (sem esperar o refetch) para o tema não "piscar".
@@ -57,38 +70,25 @@ export function useEmpresaAtual(opts?: { refetchInterval?: number; staleTime?: n
   });
 
   useEffect(() => {
-    if (
-      EMPRESA_ID &&
-      query.isSuccess &&
-      !configurada &&
-      !entrar.isPending &&
-      !tentouEntrar.current
-    ) {
-      tentouEntrar.current = true;
-      entrar.mutate(EMPRESA_ID);
-    }
-  }, [query.isSuccess, configurada, entrar]);
-
-  useEffect(() => {
     if (empresa) {
       applyEmpresaTheme(empresa);
       applyEmpresaPwaIdentity(empresa);
     }
   }, [empresa]);
 
-  // Ainda resolvendo o auto-vínculo com a padaria configurada.
-  const entrando =
-    EMPRESA_ID != null &&
-    !configurada &&
-    !entrar.isError &&
-    (query.isLoading || entrar.isPending || (query.isSuccess && !entrar.isSuccess));
-
   return {
     empresa,
-    semVinculo: query.isSuccess && !empresa && !entrando,
-    isLoading: query.isLoading || entrando,
-    isError: (query.isError && !empresa) || entrar.isError,
-    error: entrar.error ?? query.error,
+    semVinculo: query.isSuccess && !empresa && !precisaConfirmarEntrada,
+    isLoading: query.isLoading,
+    isError: query.isError && !empresa,
+    error: query.error,
     refetch: query.refetch,
+
+    precisaConfirmarEntrada,
+    empresaParaConfirmar: publica.data,
+    carregandoEmpresaParaConfirmar: publica.isLoading,
+    confirmarEntrada: () => entrar.mutate(),
+    confirmandoEntrada: entrar.isPending,
+    erroConfirmarEntrada: entrar.isError,
   };
 }

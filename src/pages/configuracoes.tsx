@@ -380,7 +380,7 @@ function QrBalcaoCard({ empresaId, empresaNome }: { empresaId: string | undefine
         <h3 className="text-[13px] font-semibold text-fg">QR do balcão</h3>
         <p className="mt-1 text-[11px] leading-snug text-fg-subtle">
           Fixo — não expira nem muda, diferente do código pessoal do cliente. Imprima e deixe no
-          caixa: o cliente escaneia, cai no app e já entra no seu programa.
+          caixa: o cliente escaneia, cai no app e confirma a entrada no seu programa.
         </p>
       </div>
 

@@ -112,7 +112,19 @@ export function CartaoPage() {
   // Cartão é a tela que o cliente deixa aberta no caixa: busca "ao vivo" (3s,
   // ou 2s com o QR na tela — pontos prestes a cair). staleTime 0 para o
   // refetch ao focar/voltar pro app valer sempre.
-  const { empresa, semVinculo, isLoading, isError, refetch } = useEmpresaAtual({
+  const {
+    empresa,
+    semVinculo,
+    isLoading,
+    isError,
+    refetch,
+    precisaConfirmarEntrada,
+    empresaParaConfirmar,
+    carregandoEmpresaParaConfirmar,
+    confirmarEntrada,
+    confirmandoEntrada,
+    erroConfirmarEntrada,
+  } = useEmpresaAtual({
     refetchInterval: codeOpen ? 2_000 : 3_000,
     staleTime: 0,
   });
@@ -204,6 +216,50 @@ export function CartaoPage() {
           <Button variant="outline" onClick={() => refetch()}>
             Tentar de novo
           </Button>
+        </div>
+      </Screen>
+    );
+  } else if (precisaConfirmarEntrada) {
+    body = (
+      <Screen>
+        <div className="mt-10 flex flex-col items-center gap-4 text-center">
+          {carregandoEmpresaParaConfirmar ? (
+            <LoadingSpinner label="Carregando…" />
+          ) : (
+            <>
+              {empresaParaConfirmar?.logoUrl ? (
+                <img
+                  src={empresaParaConfirmar.logoUrl}
+                  alt=""
+                  className="size-16 rounded-2xl object-cover"
+                />
+              ) : (
+                <span className="flex size-16 items-center justify-center rounded-2xl bg-primary-subtle text-primary-subtle-fg">
+                  <Store className="size-7" />
+                </span>
+              )}
+              <div>
+                <p className="text-[17px] font-bold text-fg">
+                  Entrar no programa de fidelidade{' '}
+                  {empresaParaConfirmar?.nome ? `da ${empresaParaConfirmar.nome}` : ''}?
+                </p>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-fg-muted">
+                  Você vai começar a juntar pontos aqui com a conta que já usa. Isso não mexe no seu
+                  cadastro em nenhuma outra padaria.
+                </p>
+              </div>
+              <Button
+                className="mt-1 h-12 w-full text-[15px] font-bold"
+                disabled={confirmandoEntrada}
+                onClick={confirmarEntrada}
+              >
+                {confirmandoEntrada ? 'Entrando…' : 'Entrar no programa'}
+              </Button>
+              {erroConfirmarEntrada ? (
+                <p className="text-[13px] text-danger-fg">Não foi possível entrar. Tente de novo.</p>
+              ) : null}
+            </>
+          )}
         </div>
       </Screen>
     );

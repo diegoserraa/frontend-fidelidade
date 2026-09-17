@@ -10,9 +10,11 @@
  *     `npm run dev`) — só faz sentido pra quem ainda usa este app como
  *     deploy single-tenant (uma padaria só, sem QR nem /admin).
  *
- * Quando presente, o cliente entra no programa dessa padaria automaticamente
- * ao logar/cadastrar (ver `hooks/use-empresa.ts`). Sem nenhum dos dois, a
- * tela Cartão ainda mostra "Mostrar meu código" pro atendente vincular no
+ * Quando presente e o cliente ainda não tem vínculo com essa empresa, a tela
+ * Cartão pede uma confirmação explícita antes de entrar no programa (ver
+ * `hooks/use-empresa.ts`) — nunca entra sozinho só porque a pessoa já estava
+ * logada (ex.: testando outra padaria com a mesma conta). Sem nenhum dos
+ * dois, a tela Cartão mostra "Mostrar meu código" pro atendente vincular no
  * primeiro scan.
  */
 const STORAGE_KEY = 'fidelidade_cliente_empresa_id';
