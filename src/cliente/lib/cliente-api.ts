@@ -24,8 +24,11 @@ export function writeClienteToken(token: string | null) {
   }
 }
 
-let onUnauthorized: (() => void) | null = null;
-export function setClienteUnauthorizedHandler(handler: (() => void) | null) {
+// `motivo` só vem preenchido quando o backend quer que a UI mostre uma
+// explicação específica (ex.: sessão encerrada por login em outro aparelho) —
+// numa expiração comum de token, vem undefined e a UI usa seu texto padrão.
+let onUnauthorized: ((motivo?: string) => void) | null = null;
+export function setClienteUnauthorizedHandler(handler: ((motivo?: string) => void) | null) {
   onUnauthorized = handler;
 }
 
@@ -45,13 +48,16 @@ export async function clienteRequest<T>(path: string, init: RequestInit = {}): P
     throw new ApiError('Sem conexão. Verifique sua internet e tente de novo.', 0);
   }
 
-  if (response.status === 401) {
-    onUnauthorized?.();
-    throw new ApiError('Sua sessão expirou. Entre novamente.', 401);
-  }
   if (response.status === 204) return undefined as T;
 
   const payload = (await response.json().catch(() => ({}))) as unknown;
+
+  if (response.status === 401) {
+    const data = payload as { erro?: string; detalhes?: { motivo?: string } };
+    onUnauthorized?.(data?.detalhes?.motivo === 'outro_aparelho' ? data.erro : undefined);
+    throw new ApiError(data?.erro || 'Sua sessão expirou. Entre novamente.', 401);
+  }
+
   if (!response.ok) {
     const data = payload as { message?: string; error?: string; erro?: string };
     throw new ApiError(

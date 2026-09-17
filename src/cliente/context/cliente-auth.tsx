@@ -13,6 +13,7 @@ import {
   writeClienteToken,
 } from '../lib/cliente-api';
 import { portalApi } from '../services/portal';
+import { useToast } from '../../components/ui/toast';
 import type { ClienteConta } from '../../types/api';
 
 interface ClienteAuthValue {
@@ -53,22 +54,30 @@ function persist(cliente: ClienteConta | null) {
 }
 
 export function ClienteAuthProvider({ children }: { children: ReactNode }) {
+  const toast = useToast();
   const [token, setToken] = useState<string | null>(() => readClienteToken());
   const [cliente, setCliente] = useState<ClienteConta | null>(readStored);
   const [isLoading, setIsLoading] = useState(Boolean(token));
 
-  const sair = useCallback(() => {
-    writeClienteToken(null);
-    persist(null);
-    setToken(null);
-    setCliente(null);
-    setIsLoading(false);
-  }, []);
+  // Limpeza local pura — usada tanto pro logout ativo quanto por um 401
+  // (token inválido/sessão encerrada em outro aparelho). `motivo`, quando
+  // vem, mostra pro cliente por que ele voltou pra tela de login sozinho.
+  const limparSessao = useCallback(
+    (motivo?: string) => {
+      writeClienteToken(null);
+      persist(null);
+      setToken(null);
+      setCliente(null);
+      setIsLoading(false);
+      if (motivo) toast.info('Sessão encerrada', motivo);
+    },
+    [toast],
+  );
 
   useEffect(() => {
-    setClienteUnauthorizedHandler(sair);
+    setClienteUnauthorizedHandler(limparSessao);
     return () => setClienteUnauthorizedHandler(null);
-  }, [sair]);
+  }, [limparSessao]);
 
   useEffect(() => {
     if (!token) return;
@@ -82,7 +91,7 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch(() => {
-        if (!cancelled) sair();
+        if (!cancelled) limparSessao();
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -90,7 +99,7 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [token, sair]);
+  }, [token, limparSessao]);
 
   const entrar = useCallback(async (input: { cpf: string; senha: string }) => {
     const data = await portalApi.login(input);
@@ -119,9 +128,17 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
       setCliente(c);
       persist(c);
     } catch {
-      sair();
+      limparSessao();
     }
-  }, [sair]);
+  }, [limparSessao]);
+
+  // Ação explícita (botão "Sair da conta"): também invalida no servidor, não
+  // só localmente — sem isso, um token esquecido logado em outro aparelho
+  // continuaria valendo até expirar (até 8h) mesmo depois deste logout.
+  const sair = useCallback(() => {
+    portalApi.sair().catch(() => undefined);
+    limparSessao();
+  }, [limparSessao]);
 
   const value = useMemo<ClienteAuthValue>(
     () => ({

@@ -32,6 +32,10 @@ export const portalApi = {
 
   excluirConta: () => clienteRequest<void>('/auth/cliente/me', { method: 'DELETE' }),
 
+  /** Invalida a sessão no servidor (não só localmente) — evita que um token
+   *  esquecido logado em outro aparelho continue valendo após o logout. */
+  sair: () => clienteRequest<void>('/auth/cliente/sair', { method: 'POST' }),
+
   getEmpresas: () => clienteRequest<EmpresaVinculo[]>('/cliente/empresas'),
 
   /** Cliente entra sozinho no programa de uma padaria (deploy single-tenant). */
