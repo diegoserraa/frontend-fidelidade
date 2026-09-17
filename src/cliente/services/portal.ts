@@ -60,4 +60,16 @@ export const portalApi = {
     clienteRequest<{ resgateId: string; status: 'cancelado' }>(`/cliente/resgates/${id}`, {
       method: 'DELETE',
     }),
+
+  subscribePush: (subscription: { endpoint: string; keys: { p256dh: string; auth: string } }) =>
+    clienteRequest<void>('/cliente/push/subscribe', {
+      method: 'POST',
+      body: JSON.stringify(subscription),
+    }),
+
+  unsubscribePush: (endpoint: string) =>
+    clienteRequest<void>('/cliente/push/unsubscribe', {
+      method: 'POST',
+      body: JSON.stringify({ endpoint }),
+    }),
 };

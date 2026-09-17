@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Screen } from '../components/screen';
 import { CodeSheet } from '../components/code-sheet';
 import { InstallPrompt } from '../components/install-prompt';
+import { NotificationPrompt } from '../components/notification-prompt';
 import { ProgressRing } from '../components/progress-ring';
 import { useClienteAuth } from '../context/cliente-auth';
 import { useEmpresaAtual } from '../hooks/use-empresa';
@@ -390,6 +391,7 @@ export function CartaoPage() {
           ) : null}
 
           <InstallPrompt />
+          <NotificationPrompt />
         </div>
       </Screen>
     );

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { LogOut, Trash2 } from 'lucide-react';
+import { Bell, LogOut, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/shared/confirm-dialog';
 import { useToast } from '../../components/ui/toast';
 import { getErrorMessage } from '../../lib/errors';
@@ -11,12 +11,92 @@ import { useClienteAuth } from '../context/cliente-auth';
 import { useEmpresaAtual } from '../hooks/use-empresa';
 import { portalApi } from '../services/portal';
 import { setPendingResgate } from '../lib/pending-resgate';
+import { ativarPushNotifications, desativarPushNotifications, isPushSupported } from '../lib/push';
 
 function Linha({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3">
       <span className="text-[13px] text-fg-subtle">{label}</span>
       <span className="min-w-0 truncate text-[14px] font-semibold text-fg">{value}</span>
+    </div>
+  );
+}
+
+function NotificacoesToggle() {
+  const toast = useToast();
+  const [permission, setPermission] = useState<NotificationPermission | null>(() =>
+    isPushSupported() ? Notification.permission : null,
+  );
+  const [loading, setLoading] = useState(false);
+
+  if (permission === null) return null;
+
+  const ativar = async () => {
+    setLoading(true);
+    try {
+      const resultado = await ativarPushNotifications();
+      if (resultado === 'ativado') {
+        toast.success('Notificações ativadas');
+        setPermission('granted');
+      } else if (resultado === 'negado') {
+        setPermission('denied');
+      }
+    } catch {
+      toast.error('Não foi possível ativar', 'Tente novamente em instantes.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const desativar = async () => {
+    setLoading(true);
+    try {
+      await desativarPushNotifications();
+      toast.success('Notificações desativadas');
+      setPermission(Notification.permission);
+    } catch {
+      toast.error('Não foi possível desativar', 'Tente novamente em instantes.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-surface-muted text-fg-muted">
+          <Bell className="size-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[14px] font-semibold text-fg">Notificações</p>
+          <p className="truncate text-[12px] text-fg-subtle">
+            {permission === 'granted'
+              ? 'Ativadas neste aparelho'
+              : permission === 'denied'
+                ? 'Bloqueadas — ative nas configurações do navegador'
+                : 'Receba avisos de promoções e recompensas'}
+          </p>
+        </div>
+      </div>
+      {permission === 'granted' ? (
+        <button
+          type="button"
+          onClick={desativar}
+          disabled={loading}
+          className="shrink-0 text-[13px] font-semibold text-fg-subtle underline underline-offset-2"
+        >
+          Desativar
+        </button>
+      ) : permission === 'default' ? (
+        <button
+          type="button"
+          onClick={ativar}
+          disabled={loading}
+          className="shrink-0 text-[13px] font-semibold text-primary-subtle-fg"
+        >
+          {loading ? 'Ativando…' : 'Ativar'}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -48,6 +128,7 @@ export function PerfilPage() {
           {empresa ? <Linha label="Padaria" value={empresa.nome} /> : null}
         </div>
 
+        <NotificacoesToggle />
         <InstallPrompt />
 
         <button

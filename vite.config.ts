@@ -35,6 +35,8 @@ export default defineConfig({
       workbox: {
         navigateFallback: 'index.html',
         globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        // Injeta os handlers de push/notificationclick no SW gerado pelo Workbox.
+        importScripts: ['push-sw.js'],
       },
     }),
   ],
