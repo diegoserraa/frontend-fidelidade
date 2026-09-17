@@ -11,6 +11,19 @@ export function isPushSupported(): boolean {
   );
 }
 
+/**
+ * Permissão do navegador ('granted') não é o mesmo que estar inscrito — depois
+ * de desativar, a permissão continua concedida (o navegador não deixa "revogar"
+ * por código), só a assinatura é que some. Por isso a UI precisa checar as duas
+ * coisas separadamente pra saber se deve oferecer "Ativar" de novo.
+ */
+export async function isPushSubscribed(): Promise<boolean> {
+  if (!isPushSupported() || Notification.permission !== 'granted') return false;
+  const registration = await navigator.serviceWorker.getRegistration();
+  const subscription = await registration?.pushManager.getSubscription();
+  return Boolean(subscription);
+}
+
 // A Push API exige a chave VAPID como Uint8Array, mas ela chega em base64url.
 function urlBase64ToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64Url.length % 4)) % 4);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Bell, LogOut, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/shared/confirm-dialog';
@@ -11,7 +11,12 @@ import { useClienteAuth } from '../context/cliente-auth';
 import { useEmpresaAtual } from '../hooks/use-empresa';
 import { portalApi } from '../services/portal';
 import { setPendingResgate } from '../lib/pending-resgate';
-import { ativarPushNotifications, desativarPushNotifications, isPushSupported } from '../lib/push';
+import {
+  ativarPushNotifications,
+  desativarPushNotifications,
+  isPushSubscribed,
+  isPushSupported,
+} from '../lib/push';
 
 function Linha({ label, value }: { label: string; value: string }) {
   return (
@@ -24,10 +29,26 @@ function Linha({ label, value }: { label: string; value: string }) {
 
 function NotificacoesToggle() {
   const toast = useToast();
+  const supported = isPushSupported();
   const [permission, setPermission] = useState<NotificationPermission | null>(() =>
-    isPushSupported() ? Notification.permission : null,
+    supported ? Notification.permission : null,
   );
+  // Permissão concedida não é o mesmo que estar inscrito — depois de desativar,
+  // a permissão do navegador continua "granted" (não dá pra revogar por código),
+  // só a assinatura é que some. Por isso rastreia os dois separadamente.
+  const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!supported) return;
+    let cancelled = false;
+    isPushSubscribed().then((value) => {
+      if (!cancelled) setSubscribed(value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supported]);
 
   if (permission === null) return null;
 
@@ -38,6 +59,7 @@ function NotificacoesToggle() {
       if (resultado === 'ativado') {
         toast.success('Notificações ativadas');
         setPermission('granted');
+        setSubscribed(true);
       } else if (resultado === 'negado') {
         setPermission('denied');
       }
@@ -53,7 +75,7 @@ function NotificacoesToggle() {
     try {
       await desativarPushNotifications();
       toast.success('Notificações desativadas');
-      setPermission(Notification.permission);
+      setSubscribed(false);
     } catch {
       toast.error('Não foi possível desativar', 'Tente novamente em instantes.');
     } finally {
@@ -70,7 +92,7 @@ function NotificacoesToggle() {
         <div className="min-w-0">
           <p className="text-[14px] font-semibold text-fg">Notificações</p>
           <p className="truncate text-[12px] text-fg-subtle">
-            {permission === 'granted'
+            {subscribed
               ? 'Ativadas neste aparelho'
               : permission === 'denied'
                 ? 'Bloqueadas — ative nas configurações do navegador'
@@ -78,16 +100,16 @@ function NotificacoesToggle() {
           </p>
         </div>
       </div>
-      {permission === 'granted' ? (
+      {subscribed ? (
         <button
           type="button"
           onClick={desativar}
           disabled={loading}
           className="shrink-0 text-[13px] font-semibold text-fg-subtle underline underline-offset-2"
         >
-          Desativar
+          {loading ? 'Desativando…' : 'Desativar'}
         </button>
-      ) : permission === 'default' ? (
+      ) : permission !== 'denied' ? (
         <button
           type="button"
           onClick={ativar}
