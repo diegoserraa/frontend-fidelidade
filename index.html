@@ -61,7 +61,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Meus Pontos" />
-    <link rel="apple-touch-icon" href="/pwa-icon.svg" />
+    <link rel="apple-touch-icon" href="%VITE_EMPRESA_LOGO_URL%" />
     <title>Fideliza+</title>
   </head>
   <body>
@@ -75,8 +75,8 @@
           var t = window.__fidelidadeTema;
           var splash = document.getElementById('app-splash');
           var logo = document.getElementById('app-splash-logo');
-          splash.style.background = (t && t.canvas) || '#fafafa';
-          logo.src = (t && t.logo) || '/pwa-icon.svg';
+          splash.style.background = (t && t.canvas) || '%VITE_EMPRESA_COR_FUNDO%';
+          logo.src = (t && t.logo) || '%VITE_EMPRESA_LOGO_URL%';
           splash.style.display = 'flex';
         } catch (e) {}
       })();
