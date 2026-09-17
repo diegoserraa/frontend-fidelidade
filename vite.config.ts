@@ -13,7 +13,10 @@ export default defineConfig(({ mode }) => {
   // carregar (tarde demais pro momento da instalação).
   const logoUrl = env.VITE_EMPRESA_LOGO_URL || '/pwa-icon.svg';
   const corPrimaria = env.VITE_EMPRESA_COR_PRIMARIA || '#059669';
-  const corFundo = env.VITE_EMPRESA_COR_FUNDO || '#ffffff';
+  // Fundo da splash nativa (Android) e da nossa splash em HTML — combina com a
+  // LOGO (extraído dela), não é o corFundo geral do app configurado em
+  // Configurações (esse continua vindo ao vivo da API, ver theme.ts).
+  const splashBg = env.VITE_EMPRESA_SPLASH_BG || '#ffffff';
 
   return {
     plugins: [
@@ -29,7 +32,7 @@ export default defineConfig(({ mode }) => {
           short_name: 'Meus Pontos',
           description: 'Seu cartão de fidelidade, recompensas e extrato de pontos.',
           theme_color: corPrimaria,
-          background_color: corFundo,
+          background_color: splashBg,
           display: 'standalone',
           orientation: 'portrait',
           scope: '/',

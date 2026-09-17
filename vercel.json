@@ -7,7 +7,7 @@
       "VITE_VAPID_PUBLIC_KEY": "BKgKowq8a0lZw7VHhErzPAkARs1No-xk9C5FHNZEI60a9Fkn9DnRxCcs-UgmSNGMSa8Di2op06_3jsyIBn6Ly50",
       "VITE_EMPRESA_LOGO_URL": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQArBCUY79yi-556EXwISpisTGguanO_odz3mPvhQg8jQ&s=10",
       "VITE_EMPRESA_COR_PRIMARIA": "#822a2a",
-      "VITE_EMPRESA_COR_FUNDO": "#f5f4f6"
+      "VITE_EMPRESA_SPLASH_BG": "#4b2200"
     }
   },
   "rewrites": [

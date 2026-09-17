@@ -35,8 +35,6 @@
        * App do cliente (/app): pré-pinta a identidade visual da padaria salva
        * na última visita, ANTES de o React montar. Sem isto a tela abre no
        * verde padrão e "pisca" para a cor configurada quando a API responde.
-       * A tela de splash usa o mesmo fundo (--color-canvas) do resto do app,
-       * então some sem deixar salto de cor quando o React assume.
        */
       (function () {
         try {
@@ -75,14 +73,16 @@
     <div id="app-splash"><img id="app-splash-logo" alt="" /></div>
     <script>
       // Roda antes do bundle React (script deferred/module) — cobre o
-      // intervalo entre o HTML pintar e o React montar de verdade.
+      // intervalo entre o HTML pintar e o React montar de verdade. O fundo é
+      // fixo (extraído da própria logo), não o --color-canvas do resto do
+      // app — aqui o objetivo é combinar com a logo, não com o app em uso.
       (function () {
         try {
           if (!location.pathname.startsWith('/app')) return;
           var t = window.__fidelidadeTema;
           var splash = document.getElementById('app-splash');
           var logo = document.getElementById('app-splash-logo');
-          splash.style.background = (t && t.canvas) || '%VITE_EMPRESA_COR_FUNDO%';
+          splash.style.background = '%VITE_EMPRESA_SPLASH_BG%';
           logo.src = (t && t.logo) || '%VITE_EMPRESA_LOGO_URL%';
           splash.style.display = 'flex';
           window.__splashShownAt = Date.now();
