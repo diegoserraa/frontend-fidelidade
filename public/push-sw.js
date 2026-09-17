@@ -4,13 +4,12 @@
 // no SW que ele gera.
 //
 // Fica fora do bundle do Vite (é copiado de `public/` como está), então não
-// dá pra ler VITE_EMPRESA_LOGO_URL em build time — o valor abaixo é a mesma
-// logo cadastrada em Configurações, colada à mão. Se a logo mudar no painel,
-// atualize aqui também e faça um novo deploy.
+// dá pra ler VITE_EMPRESA_LOGO_URL em build time — mas como a logo agora é
+// um arquivo local (public/pwa-logo-512.png, não mais um link externo), o
+// caminho abaixo funciona sem precisar de valor colado à mão.
 /* eslint-disable no-restricted-globals */
 
-const ICONE_NOTIFICACAO =
-  'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQArBCUY79yi-556EXwISpisTGguanO_odz3mPvhQg8jQ&s=10';
+const ICONE_NOTIFICACAO = '/pwa-logo-512.png';
 
 self.addEventListener('push', (event) => {
   let data = { titulo: 'Meus Pontos', mensagem: 'Você tem uma novidade.' };
