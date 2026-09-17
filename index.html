@@ -42,6 +42,13 @@
         try {
           window.__fidelidadeTema = null;
           if (!location.pathname.startsWith('/app')) return;
+          // A aba do navegador no app do cliente usa a logo da padaria, não o
+          // ícone genérico do Fideliza+ (esse continua servindo o painel em /).
+          var favicon = document.querySelector('link[rel="icon"]');
+          if (favicon) {
+            favicon.href = '%VITE_EMPRESA_LOGO_URL%';
+            favicon.removeAttribute('type');
+          }
           var t = JSON.parse(localStorage.getItem('fidelidade_cliente_tema') || 'null');
           window.__fidelidadeTema = t;
           if (!t) return;
@@ -78,6 +85,7 @@
           splash.style.background = (t && t.canvas) || '%VITE_EMPRESA_COR_FUNDO%';
           logo.src = (t && t.logo) || '%VITE_EMPRESA_LOGO_URL%';
           splash.style.display = 'flex';
+          window.__splashShownAt = Date.now();
         } catch (e) {}
       })();
     </script>
