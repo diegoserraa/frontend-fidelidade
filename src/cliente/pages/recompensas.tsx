@@ -19,7 +19,11 @@ export function RecompensasPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const { empresa, isLoading: loadingEmpresa } = useEmpresaAtual();
-  const [resgatandoId, setResgatandoId] = useState<string | null>(null);
+  // Set (não um único id) porque cada clique dispara sua própria chamada —
+  // com isPending/variables da mutation (compartilhados pra lista inteira)
+  // um segundo clique enquanto o primeiro ainda carrega mistura o estado dos
+  // dois cards.
+  const [resgatando, setResgatando] = useState<Set<string>>(() => new Set());
 
   const catalogo = useQuery({
     queryKey: ['cliente', 'catalogo', empresa?.empresaId],
@@ -30,7 +34,9 @@ export function RecompensasPage() {
   const solicitar = useMutation({
     mutationFn: (recompensa: RecompensaCliente) =>
       portalApi.solicitarResgate(empresa!.empresaId, recompensa.id),
-    onMutate: (recompensa) => setResgatandoId(recompensa.id),
+    onMutate: (recompensa) => {
+      setResgatando((atual) => new Set(atual).add(recompensa.id));
+    },
     onSuccess: (res) => {
       setPendingResgate({
         resgateId: res.resgateId,
@@ -42,7 +48,13 @@ export function RecompensasPage() {
       navigate(`/app/resgate/${res.resgateId}`);
     },
     onError: (err) => toast.error('Não foi possível resgatar', getErrorMessage(err)),
-    onSettled: () => setResgatandoId(null),
+    onSettled: (_data, _error, recompensa) => {
+      setResgatando((atual) => {
+        const proximo = new Set(atual);
+        proximo.delete(recompensa.id);
+        return proximo;
+      });
+    },
   });
 
   const loading = loadingEmpresa || catalogo.isLoading;
@@ -103,10 +115,10 @@ export function RecompensasPage() {
                 {r.resgatavel ? (
                   <Button
                     className="mt-3 h-11 w-full text-[14px] font-bold"
-                    disabled={solicitar.isPending}
+                    disabled={resgatando.has(r.id)}
                     onClick={() => solicitar.mutate(r)}
                   >
-                    {resgatandoId === r.id ? 'Aguarde…' : 'Resgatar agora'}
+                    {resgatando.has(r.id) ? 'Aguarde…' : 'Resgatar agora'}
                   </Button>
                 ) : (
                   <div className="mt-3">
