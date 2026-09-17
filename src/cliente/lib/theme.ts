@@ -11,7 +11,7 @@ const FG_DARK = '#18181b';
  */
 const THEME_CACHE_KEY = 'fidelidade_cliente_tema';
 
-function cacheTheme(t: { brand: string; contrast: string; brand2: string; canvas: string }) {
+function cacheTheme(t: { brand: string; contrast: string; brand2: string; canvas: string; logo: string | null }) {
   try {
     localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(t));
   } catch {
@@ -34,7 +34,7 @@ function setMetaThemeColor(color: string) {
  */
 export function applyEmpresaTheme(empresa: Pick<
   EmpresaVinculo,
-  'corPrimaria' | 'corSecundaria' | 'corTexto' | 'corFundo'
+  'corPrimaria' | 'corSecundaria' | 'corTexto' | 'corFundo' | 'logoUrl'
 >) {
   const root = document.documentElement.style;
 
@@ -59,7 +59,7 @@ export function applyEmpresaTheme(empresa: Pick<
   root.setProperty('--color-canvas', canvas);
 
   setMetaThemeColor(primary);
-  cacheTheme({ brand: primary, contrast, brand2: secondary, canvas });
+  cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, logo: empresa.logoUrl ?? null });
 }
 
 export function resetTheme() {

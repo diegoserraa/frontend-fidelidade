@@ -11,6 +11,7 @@ import type {
   LoginResponse,
   ProgramaFidelidade,
   Promocao,
+  PromocaoEnviada,
   Recompensa,
   Recurso,
   Resgate,
@@ -157,7 +158,8 @@ export const fidelidadeApi = {
       body: JSON.stringify(payload),
     }),
   deletePromocao: (id: string) => apiRequest<void>(`/promocoes/${id}`, { method: 'DELETE' }),
-  enviarPromocao: (id: string) => apiRequest<Promocao>(`/promocoes/${id}/enviar`, { method: 'POST' }),
+  enviarPromocao: (id: string) =>
+    apiRequest<PromocaoEnviada>(`/promocoes/${id}/enviar`, { method: 'POST' }),
 
   getProgramaFidelidade: () => apiRequest<ProgramaFidelidade>('/programa-fidelidade'),
   updateProgramaFidelidade: (payload: {

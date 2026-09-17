@@ -4,6 +4,7 @@ import { LoadingSpinner } from '../components/ui/loading-spinner';
 import { ClienteAuthProvider, useClienteAuth } from './context/cliente-auth';
 import { useEmpresaTemaPublico } from './hooks/use-empresa-tema-publico';
 import { resetTheme } from './lib/theme';
+import { hideSplash } from './lib/splash';
 import { TabBar } from './components/tab-bar';
 import { ClienteLoginPage } from './pages/login';
 import { CartaoPage } from './pages/cartao';
@@ -30,6 +31,12 @@ function Gate() {
 
   // Ao sair do app do cliente, devolve a cor padrão para o resto do site.
   useEffect(() => () => resetTheme(), []);
+
+  // Splash estática de index.html já cumpriu o papel dela assim que o React
+  // tem algo de verdade pra mostrar no lugar (spinner, login ou conteúdo).
+  useEffect(() => {
+    hideSplash();
+  }, []);
 
   if (isLoading) return <LoadingSpinner fullScreen label="Carregando…" />;
 

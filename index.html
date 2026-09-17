@@ -9,16 +9,41 @@
     />
     <meta name="theme-color" content="#059669" />
     <meta name="description" content="Programa de fidelidade Fideliza+." />
+    <style>
+      #app-splash {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        background: #fafafa;
+        transition: opacity 0.25s ease;
+      }
+      #app-splash img {
+        width: 96px;
+        height: 96px;
+        object-fit: contain;
+      }
+      #app-splash.is-hiding {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
     <script>
       /*
        * App do cliente (/app): pré-pinta a identidade visual da padaria salva
        * na última visita, ANTES de o React montar. Sem isto a tela abre no
        * verde padrão e "pisca" para a cor configurada quando a API responde.
+       * A tela de splash usa o mesmo fundo (--color-canvas) do resto do app,
+       * então some sem deixar salto de cor quando o React assume.
        */
       (function () {
         try {
+          window.__fidelidadeTema = null;
           if (!location.pathname.startsWith('/app')) return;
           var t = JSON.parse(localStorage.getItem('fidelidade_cliente_tema') || 'null');
+          window.__fidelidadeTema = t;
           if (!t) return;
           var s = document.documentElement.style;
           if (t.brand) s.setProperty('--brand', t.brand);
@@ -40,6 +65,22 @@
     <title>Fideliza+</title>
   </head>
   <body>
+    <div id="app-splash"><img id="app-splash-logo" alt="" /></div>
+    <script>
+      // Roda antes do bundle React (script deferred/module) — cobre o
+      // intervalo entre o HTML pintar e o React montar de verdade.
+      (function () {
+        try {
+          if (!location.pathname.startsWith('/app')) return;
+          var t = window.__fidelidadeTema;
+          var splash = document.getElementById('app-splash');
+          var logo = document.getElementById('app-splash-logo');
+          splash.style.background = (t && t.canvas) || '#fafafa';
+          logo.src = (t && t.logo) || '/pwa-icon.svg';
+          splash.style.display = 'flex';
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

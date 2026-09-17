@@ -178,8 +178,24 @@ export function PromocoesPage() {
   const enviarPromocao = useMutation({
     mutationFn: (id: string) => fidelidadeApi.enviarPromocao(id),
     onMutate: (id) => setSendingId(id),
-    onSuccess: () => {
-      toast.success('Campanha enviada');
+    onSuccess: ({ push }) => {
+      if (!push.habilitado) {
+        toast.error(
+          'Notificações não configuradas',
+          'O servidor não tem as chaves VAPID configuradas — a campanha foi marcada como enviada, mas nenhum aviso saiu.',
+        );
+      } else if (push.dispositivos === 0) {
+        toast.info(
+          'Nenhum cliente inscrito ainda',
+          'Ninguém ativou as notificações no app até agora — assim que ativarem, vão receber as próximas campanhas.',
+        );
+      } else if (push.enviados === 0) {
+        toast.error('Falha ao notificar', `Nenhum dos ${push.dispositivos} dispositivo(s) recebeu o aviso.`);
+      } else if (push.falhas > 0) {
+        toast.success('Campanha enviada', `${push.enviados} de ${push.dispositivos} dispositivo(s) notificado(s).`);
+      } else {
+        toast.success('Campanha enviada', `${push.enviados} dispositivo(s) notificado(s).`);
+      }
       void queryClient.invalidateQueries({ queryKey: ['promocoes'] });
     },
     onError: (err) => toast.error('Não foi possível enviar a campanha', getErrorMessage(err)),

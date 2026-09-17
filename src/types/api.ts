@@ -141,6 +141,15 @@ export interface Promocao {
   createdAt: string;
 }
 
+export interface PromocaoEnviada extends Promocao {
+  push: {
+    habilitado: boolean;
+    dispositivos: number;
+    enviados: number;
+    falhas: number;
+  };
+}
+
 export interface Usuario {
   id: string;
   nome: string;
