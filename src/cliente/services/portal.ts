@@ -71,9 +71,11 @@ export const portalApi = {
       body: JSON.stringify(subscription),
     }),
 
-  unsubscribePush: (endpoint: string) =>
-    clienteRequest<void>('/cliente/push/unsubscribe', {
-      method: 'POST',
-      body: JSON.stringify({ endpoint }),
+  /** Liga/desliga notificação só para `empresaId` — não mexe na assinatura de
+   *  push do aparelho, que é única e compartilhada entre todas as padarias. */
+  atualizarNotificacoes: (empresaId: string, ativas: boolean) =>
+    clienteRequest<void>(`/cliente/${empresaId}/notificacoes`, {
+      method: 'PUT',
+      body: JSON.stringify({ ativas }),
     }),
 };

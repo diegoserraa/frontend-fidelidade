@@ -215,6 +215,9 @@ export interface EmpresaVinculo {
   desde: string;
   nivel: NivelFidelidade;
   proximoNivel: NivelFidelidade | null;
+  /** Preferência de notificação SÓ desta padaria — não é a assinatura de push
+   *  do aparelho (essa é única, compartilhada entre todas). */
+  notificacoesAtivas: boolean;
 }
 
 export interface NivelFidelidade {

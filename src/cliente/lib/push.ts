@@ -11,19 +11,6 @@ export function isPushSupported(): boolean {
   );
 }
 
-/**
- * Permissão do navegador ('granted') não é o mesmo que estar inscrito — depois
- * de desativar, a permissão continua concedida (o navegador não deixa "revogar"
- * por código), só a assinatura é que some. Por isso a UI precisa checar as duas
- * coisas separadamente pra saber se deve oferecer "Ativar" de novo.
- */
-export async function isPushSubscribed(): Promise<boolean> {
-  if (!isPushSupported() || Notification.permission !== 'granted') return false;
-  const registration = await navigator.serviceWorker.getRegistration();
-  const subscription = await registration?.pushManager.getSubscription();
-  return Boolean(subscription);
-}
-
 // A Push API exige a chave VAPID como Uint8Array, mas ela chega em base64url.
 function urlBase64ToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64Url.length % 4)) % 4);
@@ -43,12 +30,16 @@ function subscriptionToPayload(subscription: PushSubscription) {
 }
 
 /**
- * Pede permissão de notificação (se necessário) e registra a assinatura de
- * push no backend. Deve ser chamado a partir de um clique do usuário — no
- * iOS/Safari, `Notification.requestPermission()` sem gesto do usuário falha
- * silenciosamente.
+ * Pede permissão de notificação (se necessário), garante a assinatura de
+ * push do APARELHO (uma só, compartilhada entre todas as padarias do
+ * cliente — a Push API não permite mais de uma por navegador) e liga a
+ * notificação especificamente para `empresaId`. Deve ser chamado a partir de
+ * um clique do usuário — no iOS/Safari, `Notification.requestPermission()`
+ * sem gesto do usuário falha silenciosamente.
  */
-export async function ativarPushNotifications(): Promise<'ativado' | 'negado' | 'indisponivel'> {
+export async function ativarPushNotifications(
+  empresaId: string,
+): Promise<'ativado' | 'negado' | 'indisponivel'> {
   if (!isPushSupported()) return 'indisponivel';
 
   let permission = Notification.permission;
@@ -67,15 +58,15 @@ export async function ativarPushNotifications(): Promise<'ativado' | 'negado' | 
   }
 
   await portalApi.subscribePush(subscriptionToPayload(subscription));
+  await portalApi.atualizarNotificacoes(empresaId, true);
   return 'ativado';
 }
 
-export async function desativarPushNotifications(): Promise<void> {
-  if (!isPushSupported()) return;
-  const registration = await navigator.serviceWorker.getRegistration();
-  const subscription = await registration?.pushManager.getSubscription();
-  if (!subscription) return;
-
-  await portalApi.unsubscribePush(subscription.endpoint).catch(() => undefined);
-  await subscription.unsubscribe();
+/**
+ * Desliga notificação só de `empresaId` — nunca cancela a assinatura de push
+ * do aparelho (outra padaria do mesmo cliente pode continuar precisando
+ * dela). Ver migration 011.
+ */
+export async function desativarNotificacoesDaPadaria(empresaId: string): Promise<void> {
+  await portalApi.atualizarNotificacoes(empresaId, false);
 }

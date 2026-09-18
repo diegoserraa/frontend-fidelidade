@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bell, Check, ChevronRight, LogOut, Store, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/shared/confirm-dialog';
 import { useToast } from '../../components/ui/toast';
@@ -11,12 +11,7 @@ import { useClienteAuth } from '../context/cliente-auth';
 import { selecionarEmpresa, useEmpresaAtual } from '../hooks/use-empresa';
 import { portalApi } from '../services/portal';
 import { setPendingResgate } from '../lib/pending-resgate';
-import {
-  ativarPushNotifications,
-  desativarPushNotifications,
-  isPushSubscribed,
-  isPushSupported,
-} from '../lib/push';
+import { ativarPushNotifications, desativarNotificacoesDaPadaria, isPushSupported } from '../lib/push';
 import type { EmpresaVinculo } from '../../types/api';
 
 const num = new Intl.NumberFormat('pt-BR');
@@ -30,40 +25,36 @@ function Linha({ label, value }: { label: string; value: string }) {
   );
 }
 
-function NotificacoesToggle() {
+/**
+ * Liga/desliga notificação só de `empresa` — a permissão do navegador é por
+ * aparelho (não dá pra ter uma por padaria), mas a preferência de mandar ou
+ * não push é por vínculo (ver migration 011). "Ativadas" aqui significa as
+ * duas coisas juntas: permissão concedida E esta padaria específica ligada.
+ */
+function NotificacoesToggle({ empresa }: { empresa: EmpresaVinculo }) {
   const toast = useToast();
+  const queryClient = useQueryClient();
   const supported = isPushSupported();
   const [permission, setPermission] = useState<NotificationPermission | null>(() =>
     supported ? Notification.permission : null,
   );
-  // Permissão concedida não é o mesmo que estar inscrito — depois de desativar,
-  // a permissão do navegador continua "granted" (não dá pra revogar por código),
-  // só a assinatura é que some. Por isso rastreia os dois separadamente.
-  const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!supported) return;
-    let cancelled = false;
-    isPushSubscribed().then((value) => {
-      if (!cancelled) setSubscribed(value);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [supported]);
-
   if (permission === null) return null;
+
+  const ativado = permission === 'granted' && empresa.notificacoesAtivas;
+  const atualizarEmpresas = () => queryClient.invalidateQueries({ queryKey: ['cliente', 'empresas'] });
 
   const ativar = async () => {
     setLoading(true);
     try {
-      const resultado = await ativarPushNotifications();
+      const resultado = await ativarPushNotifications(empresa.empresaId);
       if (resultado === 'ativado') {
-        toast.success('Notificações ativadas');
+        toast.success('Notificações ativadas', `Você vai receber avisos da ${empresa.nome}.`);
         setPermission('granted');
-        setSubscribed(true);
+        await atualizarEmpresas();
       } else if (resultado === 'negado') {
+        toast.info('Permissão não concedida', 'Você pode ativar depois nas configurações do navegador.');
         setPermission('denied');
       }
     } catch {
@@ -76,9 +67,9 @@ function NotificacoesToggle() {
   const desativar = async () => {
     setLoading(true);
     try {
-      await desativarPushNotifications();
-      toast.success('Notificações desativadas');
-      setSubscribed(false);
+      await desativarNotificacoesDaPadaria(empresa.empresaId);
+      toast.success('Notificações desativadas', `Você não vai mais receber avisos da ${empresa.nome}.`);
+      await atualizarEmpresas();
     } catch {
       toast.error('Não foi possível desativar', 'Tente novamente em instantes.');
     } finally {
@@ -95,15 +86,15 @@ function NotificacoesToggle() {
         <div className="min-w-0">
           <p className="text-[14px] font-semibold text-fg">Notificações</p>
           <p className="truncate text-[12px] text-fg-subtle">
-            {subscribed
-              ? 'Ativadas neste aparelho'
+            {ativado
+              ? `Ativadas para a ${empresa.nome}`
               : permission === 'denied'
                 ? 'Bloqueadas — ative nas configurações do navegador'
-                : 'Receba avisos de promoções e recompensas'}
+                : `Receba avisos de promoções da ${empresa.nome}`}
           </p>
         </div>
       </div>
-      {subscribed ? (
+      {ativado ? (
         <button
           type="button"
           onClick={desativar}
@@ -204,7 +195,7 @@ export function PerfilPage() {
 
         <PadariasSection empresas={empresas} atual={empresa} />
 
-        <NotificacoesToggle />
+        {empresa ? <NotificacoesToggle empresa={empresa} /> : null}
         <InstallPrompt />
 
         <button

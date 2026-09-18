@@ -11,7 +11,7 @@ const DISMISSED_KEY = 'fidelidade_cliente_push_dismissed';
  * Push e a permissão ainda não foi decidida (`default`) — se o usuário já
  * negou, o navegador não deixa perguntar de novo, então não insistimos.
  */
-export function NotificationPrompt() {
+export function NotificationPrompt({ empresaId }: { empresaId: string }) {
   const toast = useToast();
   const [permission, setPermission] = useState<NotificationPermission | null>(() =>
     isPushSupported() ? Notification.permission : null,
@@ -39,7 +39,7 @@ export function NotificationPrompt() {
   const ativar = async () => {
     setLoading(true);
     try {
-      const resultado = await ativarPushNotifications();
+      const resultado = await ativarPushNotifications(empresaId);
       if (resultado === 'ativado') {
         toast.success('Notificações ativadas');
         setPermission('granted');

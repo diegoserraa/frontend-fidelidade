@@ -447,7 +447,7 @@ export function CartaoPage() {
           ) : null}
 
           <InstallPrompt />
-          <NotificationPrompt />
+          <NotificationPrompt empresaId={empresa.empresaId} />
         </div>
       </Screen>
     );
