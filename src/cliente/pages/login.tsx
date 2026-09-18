@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Croissant } from 'lucide-react';
+import { ApiError } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
 import { isValidCPF, maskCPF, maskPhoneBR, onlyDigits } from '../../lib/masks';
 import { cn } from '../../lib/utils';
@@ -26,7 +27,18 @@ export function ClienteLoginPage() {
             senha: form.senha,
             telefone: onlyDigits(form.telefone) || undefined,
           }),
-    onError: (err) => setErro(getErrorMessage(err, 'Não foi possível continuar.')),
+    onError: (err) => {
+      // Cadastro é global por CPF (a mesma conta serve pra qualquer padaria,
+      // ver clienteAuth.service.ts) — quem tenta "criar conta" de novo com um
+      // CPF já cadastrado só precisa entrar, não criar outra. Troca pro modo
+      // "Entrar" sozinho em vez de deixar a pessoa quicar num erro sem saída.
+      if (modo === 'criar' && err instanceof ApiError && err.status === 409) {
+        setModo('entrar');
+        setErro('Você já tem uma conta com esse CPF — falta só sua senha.');
+        return;
+      }
+      setErro(getErrorMessage(err, 'Não foi possível continuar.'));
+    },
   });
 
   const handle = () => {
