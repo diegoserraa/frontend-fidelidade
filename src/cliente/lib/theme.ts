@@ -17,9 +17,16 @@ const FG_DARK = '#18181b';
  */
 const THEME_CACHE_KEY = 'fidelidade_cliente_tema';
 
-function cacheTheme(t: { brand: string; contrast: string; brand2: string; canvas: string; logo: string | null }) {
+function cacheTheme(t: {
+  brand: string;
+  contrast: string;
+  brand2: string;
+  canvas: string;
+  logo: string | null;
+  empresaId: string | null;
+}) {
   try {
-    localStorage.setItem(THEME_CACHE_KEY, JSON.stringify({ ...t, empresaId: EMPRESA_ID }));
+    localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(t));
   } catch {
     /* storage indisponível — só perde a otimização anti-flash */
   }
@@ -38,10 +45,15 @@ function setMetaThemeColor(color: string) {
  *  --color-canvas    fundo das telas (só é trocado se o texto escuro continuar
  *                    legível sobre ele — evita quebrar a UI com um fundo ruim)
  */
-export function applyEmpresaTheme(empresa: Pick<
-  EmpresaVinculo,
-  'corPrimaria' | 'corSecundaria' | 'corTexto' | 'corFundo' | 'logoUrl'
->) {
+export function applyEmpresaTheme(
+  empresa: Pick<EmpresaVinculo, 'corPrimaria' | 'corSecundaria' | 'corTexto' | 'corFundo' | 'logoUrl'>,
+  // Por padrão carimba a empresa que ESTE dispositivo está resolvendo agora
+  // (config.ts). Só passe um valor explícito ao trocar de padaria (ver
+  // `selecionarEmpresa` em use-empresa.ts): precisa carimbar com o id da
+  // padaria ESCOLHIDA, não a atual — `EMPRESA_ID` só vai refletir a nova
+  // depois do reload que a troca dispara.
+  empresaId: string | null = EMPRESA_ID,
+) {
   const root = document.documentElement.style;
 
   const primary = normalizeHex(empresa.corPrimaria ?? '') ?? DEFAULT_PRIMARY;
@@ -65,7 +77,7 @@ export function applyEmpresaTheme(empresa: Pick<
   root.setProperty('--color-canvas', canvas);
 
   setMetaThemeColor(primary);
-  cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, logo: empresa.logoUrl ?? null });
+  cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, logo: empresa.logoUrl ?? null, empresaId });
 }
 
 export function resetTheme() {

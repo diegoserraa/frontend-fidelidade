@@ -96,19 +96,25 @@ export function useEmpresaAtual(opts?: { refetchInterval?: number; staleTime?: n
 }
 
 /**
- * Torna `empresaId` a padaria "atual" (mesmo mecanismo do QR — grava no
+ * Torna `empresa` a padaria "atual" (mesmo mecanismo do QR — grava no
  * localStorage, ver config.ts) e recarrega. Recarregar em vez de tentar
  * trocar em runtime é de propósito: `EMPRESA_ID` é lido uma vez na carga do
  * módulo e várias partes do app (índice de tema, splash) dependem dele ser
  * estável durante a sessão — trocar de padaria é raro o bastante pra um
  * recarregamento ser um custo aceitável em troca de não arriscar os dois
  * ficarem dessincronizados.
+ *
+ * Pré-carrega o tema/logo da escolhida ANTES de recarregar (carimbado já com
+ * o id DELA, não o `EMPRESA_ID` atual — só vai virar o atual depois do
+ * reload) — sem isso, a splash abriria com a marca genérica por um instante
+ * até o React montar e buscar os dados de novo.
  */
-export function selecionarEmpresa(empresaId: string): void {
+export function selecionarEmpresa(empresa: EmpresaVinculo): void {
   try {
-    localStorage.setItem(EMPRESA_ID_STORAGE_KEY, empresaId);
+    localStorage.setItem(EMPRESA_ID_STORAGE_KEY, empresa.empresaId);
   } catch {
     /* localStorage indisponível — a troca não persiste, mas não trava a UI */
   }
+  applyEmpresaTheme(empresa, empresa.empresaId);
   window.location.assign('/app');
 }

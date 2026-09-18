@@ -148,7 +148,7 @@ function PadariasSection({ empresas, atual }: { empresas: EmpresaVinculo[]; atua
               key={e.empresaId}
               type="button"
               disabled={ativa}
-              onClick={() => selecionarEmpresa(e.empresaId)}
+              onClick={() => selecionarEmpresa(e)}
               className="flex w-full items-center gap-3 px-4 py-3 text-left disabled:cursor-default"
             >
               <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted text-fg-subtle">
