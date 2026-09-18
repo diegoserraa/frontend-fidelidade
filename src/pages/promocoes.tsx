@@ -39,10 +39,15 @@ const statusMeta: Record<Promocao['status'], { label: string; tone: StatusTone }
   inativa: { label: 'Inativa', tone: 'neutral' },
 };
 
-const emptyForm = { titulo: '', mensagem: '' };
+const emptyForm = { titulo: '', mensagem: '', validade: '' };
 
 const envio = (row: Promocao) =>
   row.enviadaEm ? new Date(row.enviadaEm).toLocaleString('pt-BR') : 'Não enviada';
+
+// `validade` é "YYYY-MM-DD" (sem hora) — monta a data em UTC pra não
+// mostrar um dia a menos por causa do fuso horário local do navegador.
+const validadeFmt = (validade: string) =>
+  new Date(`${validade}T00:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' });
 
 function IconChip({ size = 8 }: { size?: 8 | 10 }) {
   return (
@@ -75,7 +80,19 @@ const columns: DataTableColumn<Promocao>[] = [
     key: 'status',
     header: 'Status',
     render: (row) => (
-      <StatusBadge label={statusMeta[row.status].label} tone={statusMeta[row.status].tone} />
+      <div className="flex flex-wrap items-center gap-1.5">
+        <StatusBadge label={statusMeta[row.status].label} tone={statusMeta[row.status].tone} />
+        {row.vencida ? <StatusBadge label="Vencida" tone="warning" /> : null}
+      </div>
+    ),
+  },
+  {
+    key: 'validade',
+    header: 'Válido até',
+    render: (row) => (
+      <span className={cn('whitespace-nowrap', row.vencida ? 'font-medium text-danger-fg' : 'text-fg-muted')}>
+        {row.validade ? validadeFmt(row.validade) : 'Sem validade'}
+      </span>
     ),
   },
   {
@@ -135,14 +152,18 @@ export function PromocoesPage() {
 
   const openEdit = (promocao: Promocao) => {
     setEditing(promocao);
-    setForm({ titulo: promocao.titulo, mensagem: promocao.mensagem });
+    setForm({ titulo: promocao.titulo, mensagem: promocao.mensagem, validade: promocao.validade ?? '' });
     setFormError(null);
     setModalOpen(true);
   };
 
   const savePromocao = useMutation({
     mutationFn: () => {
-      const payload = { titulo: form.titulo.trim(), mensagem: form.mensagem.trim() };
+      const payload = {
+        titulo: form.titulo.trim(),
+        mensagem: form.mensagem.trim(),
+        validade: form.validade || null,
+      };
       return editing
         ? fidelidadeApi.updatePromocao(editing.id, payload)
         : fidelidadeApi.createPromocao(payload);
@@ -364,7 +385,7 @@ export function PromocoesPage() {
         title={editing ? 'Editar campanha' : 'Nova promoção'}
         description={
           editing
-            ? 'Ajuste o texto do rascunho antes de enviar.'
+            ? 'Ajuste o texto ou a validade antes de enviar (ou reenviar).'
             : 'A campanha é criada como rascunho e pode ser enviada depois.'
         }
         submitLabel={savePromocao.isPending ? 'Salvando…' : 'Salvar campanha'}
@@ -384,6 +405,12 @@ export function PromocoesPage() {
             value={form.mensagem}
             onChange={(event) => setForm((c) => ({ ...c, mensagem: event.target.value }))}
             placeholder="Mensagem enviada aos clientes"
+          />
+          <Input
+            type="date"
+            label="Válido até (opcional)"
+            value={form.validade}
+            onChange={(event) => setForm((c) => ({ ...c, validade: event.target.value }))}
           />
         </div>
       </FormModal>
@@ -447,10 +474,10 @@ function PromocaoRowActions({
       <DropdownMenuContent>
         <DropdownMenuLabel>{promocao.titulo}</DropdownMenuLabel>
         <DropdownMenuItem
-          disabled={!isRascunho}
+          disabled={!podeEnviar}
           onSelect={(event) => {
             event.preventDefault();
-            if (isRascunho) onEdit();
+            if (podeEnviar) onEdit();
           }}
         >
           <Pencil />

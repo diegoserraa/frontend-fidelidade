@@ -147,12 +147,12 @@ export const fidelidadeApi = {
   deleteRecompensa: (id: string) => apiRequest<void>(`/recompensas/${id}`, { method: 'DELETE' }),
 
   getPromocoes: () => apiRequest<Promocao[]>('/promocoes'),
-  createPromocao: (payload: { titulo: string; mensagem: string }) =>
+  createPromocao: (payload: { titulo: string; mensagem: string; validade?: string | null }) =>
     apiRequest<Promocao>('/promocoes', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
-  updatePromocao: (id: string, payload: { titulo?: string; mensagem?: string }) =>
+  updatePromocao: (id: string, payload: { titulo?: string; mensagem?: string; validade?: string | null }) =>
     apiRequest<Promocao>(`/promocoes/${id}`, {
       method: 'PUT',
       body: JSON.stringify(payload),

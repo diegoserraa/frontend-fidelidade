@@ -139,6 +139,10 @@ export interface Promocao {
   status: 'rascunho' | 'enviada' | 'inativa';
   enviadaEm: string | null;
   createdAt: string;
+  /** "Válido até" (YYYY-MM-DD) — null quando a campanha não tem validade. */
+  validade: string | null;
+  /** true quando `validade` já passou — o backend recusa enviar/reenviar. */
+  vencida: boolean;
 }
 
 export interface PromocaoEnviada extends Promocao {
