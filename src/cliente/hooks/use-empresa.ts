@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { portalApi } from '../services/portal';
 import { applyEmpresaTheme } from '../lib/theme';
 import { applyEmpresaPwaIdentity } from '../lib/pwa-identity';
-import { EMPRESA_ID } from '../lib/config';
+import { EMPRESA_ID, EMPRESA_ID_STORAGE_KEY } from '../lib/config';
 import type { EmpresaVinculo } from '../../types/api';
 
 /**
@@ -78,6 +78,8 @@ export function useEmpresaAtual(opts?: { refetchInterval?: number; staleTime?: n
 
   return {
     empresa,
+    /** Todos os vínculos do cliente — pra listar/trocar de padaria (perfil.tsx). */
+    empresas,
     semVinculo: query.isSuccess && !empresa && !precisaConfirmarEntrada,
     isLoading: query.isLoading,
     isError: query.isError && !empresa,
@@ -91,4 +93,22 @@ export function useEmpresaAtual(opts?: { refetchInterval?: number; staleTime?: n
     confirmandoEntrada: entrar.isPending,
     erroConfirmarEntrada: entrar.isError,
   };
+}
+
+/**
+ * Torna `empresaId` a padaria "atual" (mesmo mecanismo do QR — grava no
+ * localStorage, ver config.ts) e recarrega. Recarregar em vez de tentar
+ * trocar em runtime é de propósito: `EMPRESA_ID` é lido uma vez na carga do
+ * módulo e várias partes do app (índice de tema, splash) dependem dele ser
+ * estável durante a sessão — trocar de padaria é raro o bastante pra um
+ * recarregamento ser um custo aceitável em troca de não arriscar os dois
+ * ficarem dessincronizados.
+ */
+export function selecionarEmpresa(empresaId: string): void {
+  try {
+    localStorage.setItem(EMPRESA_ID_STORAGE_KEY, empresaId);
+  } catch {
+    /* localStorage indisponível — a troca não persiste, mas não trava a UI */
+  }
+  window.location.assign('/app');
 }

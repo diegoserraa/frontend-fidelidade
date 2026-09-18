@@ -18,7 +18,8 @@
  * uma empresa que não é a dela. Sem nenhum dos dois, a tela Cartão mostra
  * "Mostrar meu código" pro atendente vincular no primeiro scan.
  */
-const STORAGE_KEY = 'fidelidade_cliente_empresa_id';
+export const EMPRESA_ID_STORAGE_KEY = 'fidelidade_cliente_empresa_id';
+const STORAGE_KEY = EMPRESA_ID_STORAGE_KEY;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function resolveEmpresaId(): { id: string | null; origem: 'url' | 'storage' | 'env' | 'nenhuma' } {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Bell, LogOut, Trash2 } from 'lucide-react';
+import { Bell, Check, ChevronRight, LogOut, Store, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../../components/shared/confirm-dialog';
 import { useToast } from '../../components/ui/toast';
 import { getErrorMessage } from '../../lib/errors';
@@ -8,7 +8,7 @@ import { maskCPF } from '../../lib/masks';
 import { Screen } from '../components/screen';
 import { InstallPrompt } from '../components/install-prompt';
 import { useClienteAuth } from '../context/cliente-auth';
-import { useEmpresaAtual } from '../hooks/use-empresa';
+import { selecionarEmpresa, useEmpresaAtual } from '../hooks/use-empresa';
 import { portalApi } from '../services/portal';
 import { setPendingResgate } from '../lib/pending-resgate';
 import {
@@ -17,6 +17,9 @@ import {
   isPushSubscribed,
   isPushSupported,
 } from '../lib/push';
+import type { EmpresaVinculo } from '../../types/api';
+
+const num = new Intl.NumberFormat('pt-BR');
 
 function Linha({ label, value }: { label: string; value: string }) {
   return (
@@ -123,9 +126,58 @@ function NotificacoesToggle() {
   );
 }
 
+/**
+ * Lista todas as padarias do cliente e deixa trocar qual está "ativa" (a que
+ * aparece no Cartão/Recompensas/Extrato) — só aparece quando há mais de uma,
+ * já que trocar de QR em QR pra alternar entre padarias era exatamente a
+ * confusão que motivou isso existir.
+ */
+function PadariasSection({ empresas, atual }: { empresas: EmpresaVinculo[]; atual?: EmpresaVinculo }) {
+  if (empresas.length <= 1) return null;
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <div className="border-b border-border px-4 py-2.5">
+        <p className="text-[13px] font-semibold text-fg">Suas padarias</p>
+      </div>
+      <div className="divide-y divide-border">
+        {empresas.map((e) => {
+          const ativa = e.empresaId === atual?.empresaId;
+          return (
+            <button
+              key={e.empresaId}
+              type="button"
+              disabled={ativa}
+              onClick={() => selecionarEmpresa(e.empresaId)}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left disabled:cursor-default"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-muted text-fg-subtle">
+                {e.logoUrl ? (
+                  <img src={e.logoUrl} alt="" className="size-full object-cover" />
+                ) : (
+                  <Store className="size-4" />
+                )}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[14px] font-semibold text-fg">{e.nome}</p>
+                <p className="text-[12px] text-fg-subtle">{num.format(e.saldoPontos)} pontos</p>
+              </div>
+              {ativa ? (
+                <Check className="size-4 shrink-0 text-primary" />
+              ) : (
+                <ChevronRight className="size-4 shrink-0 text-fg-subtle" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function PerfilPage() {
   const { cliente, sair } = useClienteAuth();
-  const { empresa } = useEmpresaAtual();
+  const { empresa, empresas } = useEmpresaAtual();
   const toast = useToast();
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
@@ -147,8 +199,10 @@ export function PerfilPage() {
           <Linha label="CPF" value={cliente?.cpf ? maskCPF(cliente.cpf) : '—'} />
           <Linha label="Telefone" value={cliente?.telefone || '—'} />
           {cliente?.email ? <Linha label="E-mail" value={cliente.email} /> : null}
-          {empresa ? <Linha label="Padaria" value={empresa.nome} /> : null}
+          {empresa && empresas.length <= 1 ? <Linha label="Padaria" value={empresa.nome} /> : null}
         </div>
+
+        <PadariasSection empresas={empresas} atual={empresa} />
 
         <NotificacoesToggle />
         <InstallPrompt />
