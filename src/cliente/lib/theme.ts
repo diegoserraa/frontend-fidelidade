@@ -1,4 +1,5 @@
 import { contrastRatio, normalizeHex, readableTextColor } from '../../lib/color';
+import { EMPRESA_ID } from './config';
 import type { EmpresaVinculo } from '../../types/api';
 
 const DEFAULT_PRIMARY = '#059669';
@@ -7,13 +8,18 @@ const FG_DARK = '#18181b';
 
 /**
  * Guarda o tema já resolvido para o script inline do index.html pré-pintar a
- * próxima abertura sem "piscar" o verde padrão.
+ * próxima abertura sem "piscar" o verde padrão. Carrega `empresaId` junto de
+ * propósito: o script da splash só confia nesse cache se ele bater com a
+ * empresa que o dispositivo está resolvendo AGORA (mesma prioridade URL →
+ * localStorage → VITE_EMPRESA_ID de `config.ts`) — trava contra um cache de
+ * uma padaria diferente vazar pra splash (ex.: o mesmo aparelho testou/tem
+ * conta em mais de uma padaria).
  */
 const THEME_CACHE_KEY = 'fidelidade_cliente_tema';
 
 function cacheTheme(t: { brand: string; contrast: string; brand2: string; canvas: string; logo: string | null }) {
   try {
-    localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(t));
+    localStorage.setItem(THEME_CACHE_KEY, JSON.stringify({ ...t, empresaId: EMPRESA_ID }));
   } catch {
     /* storage indisponível — só perde a otimização anti-flash */
   }

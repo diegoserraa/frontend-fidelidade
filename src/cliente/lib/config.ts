@@ -1,21 +1,22 @@
 /**
- * Id da padaria dona deste app. Como o mesmo deploy agora pode atender várias
- * empresas (cadastradas em /admin), a origem do id é, em ordem de prioridade:
+ * Id da padaria "atual" deste app. Um único deploy atende várias empresas
+ * (cadastradas em `/admin`, que vive na mesma origem/deploy que `/app` — ver
+ * `buildAppQrUrl` em `src/lib/qr.ts`), então a origem do id é, em ordem de
+ * prioridade:
  *
- *  1. `?empresa=<uuid>` na URL — como quando o cliente escaneia o QR impresso
- *     no balcão (gerado em Configurações → "QR do balcão", que já embute o
- *     id da empresa dona daquele balcão). Guardado no localStorage assim que
- *     visto, pra sobreviver ao cadastro/login e a uma nova visita sem o link.
- *  2. `VITE_EMPRESA_ID` (arquivo `.env` / `.env.local` — exige reiniciar o
- *     `npm run dev`) — só faz sentido pra quem ainda usa este app como
- *     deploy single-tenant (uma padaria só, sem QR nem /admin).
+ *  1. `?empresa=<uuid>` na URL — do QR impresso no balcão (Configurações →
+ *     "QR do balcão", que já embute o id da empresa dona daquele balcão), ou
+ *     do QR que o super admin gera em `/admin` ao cadastrar uma padaria nova.
+ *     Guardado no localStorage assim que visto, pra sobreviver ao
+ *     cadastro/login e a uma nova visita sem o link.
+ *  2. `VITE_EMPRESA_ID` (variável de build) — fallback pra um deploy dedicado
+ *     de UMA padaria só (domínio próprio, sem depender de QR nem `/admin`).
  *
- * Quando presente e o cliente ainda não tem vínculo com essa empresa, a tela
- * Cartão pede uma confirmação explícita antes de entrar no programa (ver
- * `hooks/use-empresa.ts`) — nunca entra sozinho só porque a pessoa já estava
- * logada (ex.: testando outra padaria com a mesma conta). Sem nenhum dos
- * dois, a tela Cartão mostra "Mostrar meu código" pro atendente vincular no
- * primeiro scan.
+ * Entrar no programa dessa empresa SEMPRE passa por confirmação explícita do
+ * cliente (ver `hooks/use-empresa.ts` / tela em `cartao.tsx`) — nunca
+ * acontece só porque a pessoa já estava logada e passou perto do link/QR de
+ * uma empresa que não é a dela. Sem nenhum dos dois, a tela Cartão mostra
+ * "Mostrar meu código" pro atendente vincular no primeiro scan.
  */
 const STORAGE_KEY = 'fidelidade_cliente_empresa_id';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -51,11 +52,11 @@ if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
   const log = console;
   if (resolvido.origem === 'url') {
-    log.info(`[app-cliente] empresa=${EMPRESA_ID} veio da URL (QR do balcão) — auto-vínculo ativo.`);
+    log.info(`[app-cliente] empresa=${EMPRESA_ID} veio da URL (QR) — pede confirmação antes de entrar.`);
   } else if (resolvido.origem === 'storage') {
-    log.info(`[app-cliente] empresa=${EMPRESA_ID} lembrado de uma visita anterior — auto-vínculo ativo.`);
+    log.info(`[app-cliente] empresa=${EMPRESA_ID} lembrado de uma visita anterior.`);
   } else if (resolvido.origem === 'env') {
-    log.info(`[app-cliente] VITE_EMPRESA_ID OK — auto-vínculo com ${EMPRESA_ID}`);
+    log.info(`[app-cliente] VITE_EMPRESA_ID OK — ${EMPRESA_ID}`);
   } else {
     log.warn(
       '[app-cliente] Nenhuma empresa identificada (sem ?empresa= na URL, nada salvo, sem ' +

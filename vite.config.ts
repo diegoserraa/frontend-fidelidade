@@ -6,11 +6,14 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
-  // Deploy single-tenant (uma padaria por instância, ver VITE_EMPRESA_ID):
+  // Deploy DEDICADO a uma única padaria (ver VITE_EMPRESA_ID e o aviso em
+  // .env.example — não definir isso no deploy compartilhado/multi-tenant):
   // com a logo/cores de verdade já na config estática, o ícone do PWA e a
   // splash nativa do Android saem certos desde a primeira instalação — sem
   // isso, dependem de um patch em runtime que só aplica depois de a página
-  // carregar (tarde demais pro momento da instalação).
+  // carregar (tarde demais pro momento da instalação). Sem as variáveis
+  // (deploy compartilhado, o caso comum), cai no ícone genérico do
+  // Fideliza+ — correto, já que uma instância só atende várias padarias.
   // logoUrl serve pro favicon/apple-touch-icon/splash/notificação (qualquer
   // tamanho serve, o navegador escala). logo192 é um arquivo À PARTE, gerado
   // com o tamanho EXATO que essa entrada do manifesto pede — nada de reusar a
@@ -25,6 +28,10 @@ export default defineConfig(({ mode }) => {
   // LOGO (extraído dela), não é o corFundo geral do app configurado em
   // Configurações (esse continua vindo ao vivo da API, ver theme.ts).
   const splashBg = env.VITE_EMPRESA_SPLASH_BG || '#ffffff';
+  // O tipo precisa bater com o arquivo de verdade — os defaults acima caem
+  // pro .svg genérico, então "image/png" fixo quebraria o manifesto pra
+  // quem NÃO configurou uma logo própria (o caso comum, deploy compartilhado).
+  const tipoDoArquivo = (url: string) => (url.endsWith('.svg') ? 'image/svg+xml' : 'image/png');
 
   return {
     plugins: [
@@ -46,9 +53,9 @@ export default defineConfig(({ mode }) => {
           scope: '/',
           start_url: '/app/',
           icons: [
-            { src: logo192, sizes: '192x192', type: 'image/png', purpose: 'any' },
-            { src: logoUrl, sizes: '512x512', type: 'image/png', purpose: 'any' },
-            { src: logoUrl, sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+            { src: logo192, sizes: '192x192', type: tipoDoArquivo(logo192), purpose: 'any' },
+            { src: logoUrl, sizes: '512x512', type: tipoDoArquivo(logoUrl), purpose: 'any' },
+            { src: logoUrl, sizes: '512x512', type: tipoDoArquivo(logoUrl), purpose: 'maskable' },
           ],
         },
         workbox: {

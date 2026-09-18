@@ -3,13 +3,12 @@
 // vite-plugin-pwa (modo generateSW) não deixa escrever eventos custom direto
 // no SW que ele gera.
 //
-// Fica fora do bundle do Vite (é copiado de `public/` como está), então não
-// dá pra ler VITE_EMPRESA_LOGO_URL em build time — mas como a logo agora é
-// um arquivo local (public/pwa-logo-512.png, não mais um link externo), o
-// caminho abaixo funciona sem precisar de valor colado à mão.
+// Ícone genérico do Fideliza+ de propósito: um deploy só manda notificação
+// pra clientes de VÁRIAS padarias diferentes (ver src/cliente/lib/config.ts)
+// — não dá pra saber em build time qual logo usar pra cada notificação.
 /* eslint-disable no-restricted-globals */
 
-const ICONE_NOTIFICACAO = '/pwa-logo-512.png';
+const ICONE_NOTIFICACAO = '/pwa-icon.svg';
 
 self.addEventListener('push', (event) => {
   let data = { titulo: 'Meus Pontos', mensagem: 'Você tem uma novidade.' };

@@ -45,6 +45,25 @@
         try {
           window.__fidelidadeTema = null;
           if (!location.pathname.startsWith('/app')) return;
+          // Mesma prioridade de src/cliente/lib/config.ts (duplicado de
+          // propósito: esse script roda ANTES do bundle React, não pode
+          // importar dali). Um deploy só atende várias padarias — precisa
+          // saber qual empresa é a "atual" ANTES de decidir se confia no
+          // cache de tema salvo, senão o dispositivo de quem já testou mais
+          // de uma padaria (ou um cliente de verdade com conta em mais de
+          // uma) herdaria a marca errada.
+          var empresaIdAtual = null;
+          try {
+            var daUrl = new URLSearchParams(location.search).get('empresa');
+            if (daUrl) {
+              localStorage.setItem('fidelidade_cliente_empresa_id', daUrl);
+              empresaIdAtual = daUrl;
+            } else {
+              empresaIdAtual = localStorage.getItem('fidelidade_cliente_empresa_id');
+            }
+          } catch (e) {}
+          if (!empresaIdAtual) empresaIdAtual = '%VITE_EMPRESA_ID%' || null;
+
           // A aba do navegador no app do cliente usa a logo da padaria, não o
           // ícone genérico do Fideliza+ (esse continua servindo o painel em /).
           var favicon = document.querySelector('link[rel="icon"]');
@@ -53,6 +72,9 @@
             favicon.removeAttribute('type');
           }
           var t = JSON.parse(localStorage.getItem('fidelidade_cliente_tema') || 'null');
+          // Só confia no cache se ele foi salvo para a MESMA empresa que este
+          // dispositivo está resolvendo agora.
+          if (t && (!empresaIdAtual || t.empresaId !== empresaIdAtual)) t = null;
           window.__fidelidadeTema = t;
           if (!t) return;
           var s = document.documentElement.style;
