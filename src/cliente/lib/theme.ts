@@ -31,10 +31,6 @@ function cacheTheme(t: {
   }
 }
 
-function setMetaThemeColor(color: string) {
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color);
-}
-
 /**
  * Aplica a identidade visual configurada pela empresa no app do cliente:
  *
@@ -81,7 +77,10 @@ export function applyEmpresaTheme(
     canvasCfg && contrastRatio(canvasCfg, FG_DARK) >= 4.5 ? canvasCfg : DEFAULT_CANVAS;
   root.setProperty('--color-canvas', canvas);
 
-  setMetaThemeColor(primary);
+  // theme-color (a barra de status do Android) fica preta fixa de propósito
+  // — não é tocada aqui. O Android só lê essa cor UMA VEZ, na instalação, e
+  // nunca mais atualiza; se ela mudasse por padaria, ficaria congelada na
+  // cor de quem instalou, destoando depois de trocar de padaria no app.
   cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, empresaId });
 }
 
@@ -91,5 +90,4 @@ export function resetTheme() {
   root.removeProperty('--brand-contrast');
   root.removeProperty('--brand-2');
   root.removeProperty('--color-canvas');
-  setMetaThemeColor(DEFAULT_PRIMARY);
 }

@@ -7,7 +7,10 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#059669" />
+    <!-- Preto fixo de propósito, nunca trocado por JS: o Android tira uma
+         "foto" dessa cor só na instalação e nunca mais atualiza — se fosse
+         dinâmica por padaria, ficaria travada na cor de quem instalou. -->
+    <meta name="theme-color" content="#000000" />
     <meta name="description" content="Programa de fidelidade Fideliza+." />
     <style>
       /*
@@ -106,10 +109,8 @@
           if (t.canvas) s.setProperty('--color-canvas', t.canvas);
           if (t.brand) s.setProperty('--splash-bg', t.brand);
           if (t.brand2) s.setProperty('--splash-bg-2', t.brand2);
-          if (t.brand) {
-            var m = document.querySelector('meta[name="theme-color"]');
-            if (m) m.setAttribute('content', t.brand);
-          }
+          // theme-color fica preto fixo de propósito — ver comentário na tag
+          // no <head>. Não trocar por padaria aqui.
         } catch (e) {}
       })();
     </script>

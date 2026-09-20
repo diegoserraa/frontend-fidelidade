@@ -23,7 +23,12 @@ export default defineConfig(({ mode }) => {
   // do nosso controle), esses arquivos ficam em public/, hospedados por nós.
   const logoUrl = env.VITE_EMPRESA_LOGO_URL || '/pwa-icon.svg';
   const logo192 = env.VITE_EMPRESA_LOGO_192 || logoUrl;
-  const corPrimaria = env.VITE_EMPRESA_COR_PRIMARIA || '#059669';
+  // Preto por padrão (não a cor de marca): o Android tira uma "foto" dessa
+  // cor no momento da instalação e nunca mais atualiza — se fosse dinâmica,
+  // ficaria travada na cor de qualquer padaria que estivesse ativa nesse
+  // instante, podendo destoar depois de trocar de padaria no app (ver
+  // decisão em theme.ts, que por isso não toca mais em theme-color).
+  const corPrimaria = env.VITE_EMPRESA_COR_PRIMARIA || '#000000';
   // Fundo da splash nativa (Android) e da nossa splash em HTML — combina com a
   // LOGO (extraído dela), não é o corFundo geral do app configurado em
   // Configurações (esse continua vindo ao vivo da API, ver theme.ts).
