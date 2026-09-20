@@ -80,7 +80,7 @@ export const fidelidadeApi = {
   getClienteResumo: (id: string) => apiRequest<ClienteResumo>(`/clientes/${id}/resumo`),
   updateCliente: (
     id: string,
-    payload: { nome?: string; telefone?: string | null; cpf?: string },
+    payload: { nome?: string; telefone?: string | null; cpf?: string; email?: string | null },
   ) =>
     apiRequest<Cliente>(`/clientes/${id}`, {
       method: 'PUT',

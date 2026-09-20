@@ -44,7 +44,7 @@ type StatusFilter = 'todos' | 'ativo' | 'inativo';
 const statusLabel = (status: Cliente['status']) => (status === 'ativo' ? 'Ativo' : 'Inativo');
 const statusTone = (status: Cliente['status']) => (status === 'ativo' ? 'success' : 'neutral');
 
-const emptyForm = { nome: '', cpf: '', telefone: '' };
+const emptyForm = { nome: '', cpf: '', telefone: '', email: '' };
 
 const formatCpf = (cpf: string | null) => (cpf ? maskCPF(cpf) : null);
 
@@ -144,6 +144,7 @@ export function ClientesPage() {
       nome: cliente.nome,
       cpf: cliente.cpf ? maskCPF(cliente.cpf) : '',
       telefone: cliente.telefone ? maskPhoneBR(cliente.telefone) : '',
+      email: cliente.email ?? '',
     });
     setFormError(null);
     setModalOpen(true);
@@ -156,8 +157,10 @@ export function ClientesPage() {
         cpf: onlyDigits(form.cpf),
         telefone: onlyDigits(form.telefone) || null,
       };
+      // E-mail é usado só pra recuperação de senha da conta do cliente — não
+      // existe na criação pelo balcão (o cliente ainda nem tem conta/senha).
       return editing
-        ? fidelidadeApi.updateCliente(editing.id, base)
+        ? fidelidadeApi.updateCliente(editing.id, { ...base, email: form.email.trim() || null })
         : fidelidadeApi.createCliente(base);
     },
     onSuccess: () => {
@@ -194,6 +197,10 @@ export function ClientesPage() {
     const tel = onlyDigits(form.telefone);
     if (tel && (tel.length < 10 || tel.length > 11)) {
       return setFormError('Telefone incompleto — use DDD + número.');
+    }
+    const email = form.email.trim();
+    if (editing && email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return setFormError('Confira o e-mail.');
     }
     setFormError(null);
     saveCliente.mutate();
@@ -374,6 +381,18 @@ export function ClientesPage() {
               maxLength={15}
             />
           </div>
+          {editing ? (
+            <Input
+              label="E-mail"
+              hint="Usado para o cliente recuperar a senha da conta"
+              value={form.email}
+              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+              placeholder="cliente@email.com"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+            />
+          ) : null}
         </div>
       </FormModal>
 
