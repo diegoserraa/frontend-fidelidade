@@ -14,7 +14,7 @@ type Modo = 'entrar' | 'criar';
 export function ClienteLoginPage() {
   const { entrar, criarConta } = useClienteAuth();
   const [modo, setModo] = useState<Modo>('entrar');
-  const [form, setForm] = useState({ nome: '', cpf: '', telefone: '', senha: '' });
+  const [form, setForm] = useState({ nome: '', cpf: '', telefone: '', email: '', senha: '' });
   const [erro, setErro] = useState<string | null>(null);
 
   const submit = useMutation({
@@ -26,6 +26,7 @@ export function ClienteLoginPage() {
             cpf: onlyDigits(form.cpf),
             senha: form.senha,
             telefone: onlyDigits(form.telefone) || undefined,
+            email: form.email.trim() || undefined,
           }),
     onError: (err) => {
       // Cadastro é global por CPF (a mesma conta serve pra qualquer padaria,
@@ -48,6 +49,8 @@ export function ClienteLoginPage() {
     if (modo === 'criar') {
       const tel = onlyDigits(form.telefone);
       if (tel && (tel.length < 10 || tel.length > 11)) return setErro('Telefone incompleto.');
+      const email = form.email.trim();
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setErro('Confira o e-mail.');
     }
     // Cadastro exige senha mais forte (8+); login só confere o mínimo antigo
     // pra não bloquear quem já tem conta com senha de 6-7 caracteres.
@@ -149,6 +152,19 @@ export function ClienteLoginPage() {
               inputMode="numeric"
               maxLength={15}
               autoComplete="tel"
+            />
+          ) : null}
+
+          {modo === 'criar' ? (
+            <Field
+              label="E-mail"
+              hint="Opcional — usamos só para o caso de você esquecer a senha"
+              value={form.email}
+              onChange={(e) => setForm((c) => ({ ...c, email: e.target.value }))}
+              placeholder="seu@email.com"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
             />
           ) : null}
 

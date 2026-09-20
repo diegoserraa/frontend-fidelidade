@@ -16,7 +16,7 @@ export const portalApi = {
   getEmpresaPublica: (empresaId: string) =>
     clienteRequest<EmpresaPublica>(`/empresa/${empresaId}/publico`),
 
-  registrar: (input: { nome: string; cpf: string; senha: string; telefone?: string }) =>
+  registrar: (input: { nome: string; cpf: string; senha: string; telefone?: string; email?: string }) =>
     clienteRequest<ClienteLoginResponse>('/auth/cliente/registrar', {
       method: 'POST',
       body: JSON.stringify(input),

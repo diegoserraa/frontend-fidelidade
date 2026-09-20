@@ -27,6 +27,7 @@ interface ClienteAuthValue {
     cpf: string;
     senha: string;
     telefone?: string;
+    email?: string;
   }) => Promise<void>;
   sair: () => void;
   atualizar: () => Promise<void>;
@@ -111,7 +112,7 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const criarConta = useCallback(
-    async (input: { nome: string; cpf: string; senha: string; telefone?: string }) => {
+    async (input: { nome: string; cpf: string; senha: string; telefone?: string; email?: string }) => {
       const data = await portalApi.registrar(input);
       writeClienteToken(data.token);
       persist(data.cliente);
