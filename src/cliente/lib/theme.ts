@@ -94,6 +94,7 @@ export function applyEmpresaTheme(
 
   const secondary = normalizeHex(empresa.corSecundaria ?? '') ?? primary;
   root.setProperty('--brand-2', secondary);
+  root.setProperty('--splash-bg-2', secondary);
 
   const canvasCfg = normalizeHex(empresa.corFundo ?? '');
   const canvas =
