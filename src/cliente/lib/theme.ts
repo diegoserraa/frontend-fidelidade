@@ -37,6 +37,25 @@ function setMetaThemeColor(color: string) {
 }
 
 /**
+ * Se a splash estática de index.html ainda estiver na tela quando a logo de
+ * verdade chegar da API, troca ao vivo os pontinhos neutros pela logo —
+ * evita ficar preso nos pontinhos pelos 3s inteiros quando a resposta é
+ * rápida (comum: primeira visita a uma padaria, ou cache limpo pelo SO).
+ */
+function atualizarSplashAoVivo(logoUrl: string | null) {
+  try {
+    if (!logoUrl) return;
+    const splash = document.getElementById('app-splash');
+    const img = document.getElementById('app-splash-logo');
+    if (!splash || !(img instanceof HTMLImageElement)) return;
+    img.src = logoUrl;
+    splash.classList.add('has-logo');
+  } catch {
+    /* splash já pode ter sido removida — sem problema */
+  }
+}
+
+/**
  * Aplica a identidade visual configurada pela empresa no app do cliente:
  *
  *  --brand           cor primária (todas as variações derivam dela em index.css)
@@ -78,6 +97,7 @@ export function applyEmpresaTheme(
 
   setMetaThemeColor(primary);
   cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, logo: empresa.logoUrl ?? null, empresaId });
+  atualizarSplashAoVivo(empresa.logoUrl ?? null);
 }
 
 export function resetTheme() {
