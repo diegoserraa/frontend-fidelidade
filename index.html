@@ -22,7 +22,11 @@
         z-index: 9999;
         align-items: center;
         justify-content: center;
-        background: %VITE_EMPRESA_SPLASH_BG%;
+        /* --splash-bg vem do cache da padaria (script logo abaixo) — mesma
+           cor de fundo configurada em Configurações, pra não sobrar branco
+           genérico em volta da logo. Sem cache ainda, cai no valor fixo
+           (neutro) — combina com os pontinhos de carregamento. */
+        background: var(--splash-bg, %VITE_EMPRESA_SPLASH_BG%);
         transition: opacity 0.25s ease;
       }
       #app-splash img {
@@ -120,6 +124,7 @@
           if (t.contrast) s.setProperty('--brand-contrast', t.contrast);
           if (t.brand2) s.setProperty('--brand-2', t.brand2);
           if (t.canvas) s.setProperty('--color-canvas', t.canvas);
+          if (t.canvas) s.setProperty('--splash-bg', t.canvas);
           if (t.brand) {
             var m = document.querySelector('meta[name="theme-color"]');
             if (m) m.setAttribute('content', t.brand);

@@ -94,6 +94,10 @@ export function applyEmpresaTheme(
   const canvas =
     canvasCfg && contrastRatio(canvasCfg, FG_DARK) >= 4.5 ? canvasCfg : DEFAULT_CANVAS;
   root.setProperty('--color-canvas', canvas);
+  // Mesma cor no fundo da splash — cobre o caso de cache-miss (primeira
+  // visita a esta padaria) em que a resposta da API chega enquanto a splash
+  // estática de index.html ainda está visível.
+  root.setProperty('--splash-bg', canvas);
 
   setMetaThemeColor(primary);
   cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, logo: empresa.logoUrl ?? null, empresaId });
