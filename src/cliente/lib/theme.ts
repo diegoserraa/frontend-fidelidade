@@ -22,7 +22,6 @@ function cacheTheme(t: {
   contrast: string;
   brand2: string;
   canvas: string;
-  logo: string | null;
   empresaId: string | null;
 }) {
   try {
@@ -37,25 +36,6 @@ function setMetaThemeColor(color: string) {
 }
 
 /**
- * Se a splash estática de index.html ainda estiver na tela quando a logo de
- * verdade chegar da API, troca ao vivo os pontinhos neutros pela logo —
- * evita ficar preso nos pontinhos pelos 3s inteiros quando a resposta é
- * rápida (comum: primeira visita a uma padaria, ou cache limpo pelo SO).
- */
-function atualizarSplashAoVivo(logoUrl: string | null) {
-  try {
-    if (!logoUrl) return;
-    const splash = document.getElementById('app-splash');
-    const img = document.getElementById('app-splash-logo');
-    if (!splash || !(img instanceof HTMLImageElement)) return;
-    img.src = logoUrl;
-    splash.classList.add('has-logo');
-  } catch {
-    /* splash já pode ter sido removida — sem problema */
-  }
-}
-
-/**
  * Aplica a identidade visual configurada pela empresa no app do cliente:
  *
  *  --brand           cor primária (todas as variações derivam dela em index.css)
@@ -65,7 +45,7 @@ function atualizarSplashAoVivo(logoUrl: string | null) {
  *                    legível sobre ele — evita quebrar a UI com um fundo ruim)
  */
 export function applyEmpresaTheme(
-  empresa: Pick<EmpresaVinculo, 'corPrimaria' | 'corSecundaria' | 'corTexto' | 'corFundo' | 'logoUrl'>,
+  empresa: Pick<EmpresaVinculo, 'corPrimaria' | 'corSecundaria' | 'corTexto' | 'corFundo'>,
   // Por padrão carimba a empresa que ESTE dispositivo está resolvendo agora
   // (config.ts). Só passe um valor explícito ao trocar de padaria (ver
   // `selecionarEmpresa` em use-empresa.ts): precisa carimbar com o id da
@@ -102,8 +82,7 @@ export function applyEmpresaTheme(
   root.setProperty('--color-canvas', canvas);
 
   setMetaThemeColor(primary);
-  cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, logo: empresa.logoUrl ?? null, empresaId });
-  atualizarSplashAoVivo(empresa.logoUrl ?? null);
+  cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, empresaId });
 }
 
 export function resetTheme() {
