@@ -20,27 +20,37 @@
         position: fixed;
         inset: 0;
         z-index: 9999;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        /* --splash-bg vem do cache da padaria (script logo abaixo) — mesma
-           cor de fundo configurada em Configurações, pra não sobrar branco
-           genérico em volta da logo. Sem cache ainda, cai no valor fixo
-           (neutro) — combina com os pontinhos de carregamento. */
+        /* --splash-bg vem do cache da padaria (script logo abaixo) — a cor
+           PRIMÁRIA configurada (sempre existe, é o campo principal de marca),
+           pra ocupar a tela toda com a cor da padaria em vez de branco
+           genérico. Sem cache ainda, cai no valor fixo (neutro) — combina
+           com os pontinhos de carregamento. */
         background: var(--splash-bg, %VITE_EMPRESA_SPLASH_BG%);
         transition: opacity 0.25s ease;
       }
-      #app-splash img {
-        width: 96px;
-        height: 96px;
-        object-fit: contain;
-        /* Só aparece quando a splash tem certeza de qual é a logo certa (ver
-           script no <body>) — enquanto isso, mostra os pontinhos abaixo em
-           vez de arriscar mostrar a marca errada (ex.: de outra padaria, ou
-           o ícone genérico do Fideliza+). */
+      /* "Selo" branco atrás da logo: garante contraste em qualquer cor de
+         fundo (mesmo se a logo for escura e a cor da padaria também) e dá
+         uma cara mais "de app de verdade" do que a logo boiando sozinha. */
+      #app-splash .app-splash-badge {
         display: none;
+        width: 132px;
+        height: 132px;
+        border-radius: 28px;
+        background: #fff;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
       }
-      #app-splash.has-logo img {
-        display: block;
+      #app-splash.has-logo .app-splash-badge {
+        display: flex;
+      }
+      #app-splash img {
+        width: 88px;
+        height: 88px;
+        object-fit: contain;
       }
       #app-splash .app-splash-dots {
         display: flex;
@@ -124,7 +134,7 @@
           if (t.contrast) s.setProperty('--brand-contrast', t.contrast);
           if (t.brand2) s.setProperty('--brand-2', t.brand2);
           if (t.canvas) s.setProperty('--color-canvas', t.canvas);
-          if (t.canvas) s.setProperty('--splash-bg', t.canvas);
+          if (t.brand) s.setProperty('--splash-bg', t.brand);
           if (t.brand) {
             var m = document.querySelector('meta[name="theme-color"]');
             if (m) m.setAttribute('content', t.brand);
@@ -141,7 +151,9 @@
   </head>
   <body>
     <div id="app-splash">
-      <img id="app-splash-logo" alt="" />
+      <div class="app-splash-badge">
+        <img id="app-splash-logo" alt="" />
+      </div>
       <div class="app-splash-dots" aria-hidden="true"><span></span><span></span><span></span></div>
     </div>
     <script>

@@ -77,6 +77,11 @@ export function applyEmpresaTheme(
 
   const primary = normalizeHex(empresa.corPrimaria ?? '') ?? DEFAULT_PRIMARY;
   root.setProperty('--brand', primary);
+  // Fundo da splash: a cor primária, não a "cor de fundo" (corFundo é
+  // opcional e raramente configurada — ficaria quase branca por padrão,
+  // que é exatamente o visual "ícone boiando" que queremos evitar). A
+  // primária é o único campo de marca que toda padaria configura.
+  root.setProperty('--splash-bg', primary);
 
   // Usa a cor de texto configurada pela empresa, mas só se ela for legível sobre
   // a primária (rede de proteção para não deixar o cartão ilegível).
@@ -94,10 +99,6 @@ export function applyEmpresaTheme(
   const canvas =
     canvasCfg && contrastRatio(canvasCfg, FG_DARK) >= 4.5 ? canvasCfg : DEFAULT_CANVAS;
   root.setProperty('--color-canvas', canvas);
-  // Mesma cor no fundo da splash — cobre o caso de cache-miss (primeira
-  // visita a esta padaria) em que a resposta da API chega enquanto a splash
-  // estática de index.html ainda está visível.
-  root.setProperty('--splash-bg', canvas);
 
   setMetaThemeColor(primary);
   cacheTheme({ brand: primary, contrast, brand2: secondary, canvas, logo: empresa.logoUrl ?? null, empresaId });
