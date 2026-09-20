@@ -12,6 +12,7 @@ import { RecompensasPage } from './pages/recompensas';
 import { ExtratoPage } from './pages/extrato';
 import { PerfilPage } from './pages/perfil';
 import { ResgatePage } from './pages/resgate';
+import { RedefinirSenhaPage } from './pages/redefinir-senha';
 
 function TabbedLayout() {
   return (
@@ -72,7 +73,12 @@ function Gate() {
 export default function ClienteApp() {
   return (
     <ClienteAuthProvider>
-      <Gate />
+      <Routes>
+        {/* Fora do "gate" de autenticação de propósito: o link de e-mail tem
+         *  que funcionar tanto deslogado quanto logado. */}
+        <Route path="redefinir-senha" element={<RedefinirSenhaPage />} />
+        <Route path="*" element={<Gate />} />
+      </Routes>
     </ClienteAuthProvider>
   );
 }

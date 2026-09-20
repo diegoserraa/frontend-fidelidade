@@ -30,6 +30,19 @@ export const portalApi = {
 
   me: () => clienteRequest<ClienteConta>('/auth/cliente/me'),
 
+  /** Resposta é sempre a mesma genérica, exista ou não conta com esse CPF. */
+  esqueciSenha: (cpf: string) =>
+    clienteRequest<{ mensagem: string }>('/auth/cliente/esqueci-senha', {
+      method: 'POST',
+      body: JSON.stringify({ cpf }),
+    }),
+
+  redefinirSenha: (input: { token: string; novaSenha: string }) =>
+    clienteRequest<ClienteLoginResponse>('/auth/cliente/redefinir-senha', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+
   excluirConta: () => clienteRequest<void>('/auth/cliente/me', { method: 'DELETE' }),
 
   /** Invalida a sessão no servidor (não só localmente) — evita que um token

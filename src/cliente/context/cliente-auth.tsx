@@ -29,6 +29,7 @@ interface ClienteAuthValue {
     telefone?: string;
     email?: string;
   }) => Promise<void>;
+  redefinirSenha: (input: { token: string; novaSenha: string }) => Promise<void>;
   sair: () => void;
   atualizar: () => Promise<void>;
 }
@@ -102,8 +103,7 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
     };
   }, [token, limparSessao]);
 
-  const entrar = useCallback(async (input: { cpf: string; senha: string }) => {
-    const data = await portalApi.login(input);
+  const aplicarSessao = useCallback((data: { token: string; cliente: ClienteConta }) => {
     writeClienteToken(data.token);
     persist(data.cliente);
     setToken(data.token);
@@ -111,16 +111,25 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  const entrar = useCallback(
+    async (input: { cpf: string; senha: string }) => {
+      aplicarSessao(await portalApi.login(input));
+    },
+    [aplicarSessao],
+  );
+
   const criarConta = useCallback(
     async (input: { nome: string; cpf: string; senha: string; telefone?: string; email?: string }) => {
-      const data = await portalApi.registrar(input);
-      writeClienteToken(data.token);
-      persist(data.cliente);
-      setToken(data.token);
-      setCliente(data.cliente);
-      setIsLoading(false);
+      aplicarSessao(await portalApi.registrar(input));
     },
-    [],
+    [aplicarSessao],
+  );
+
+  const redefinirSenha = useCallback(
+    async (input: { token: string; novaSenha: string }) => {
+      aplicarSessao(await portalApi.redefinirSenha(input));
+    },
+    [aplicarSessao],
   );
 
   const atualizar = useCallback(async () => {
@@ -149,10 +158,11 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       entrar,
       criarConta,
+      redefinirSenha,
       sair,
       atualizar,
     }),
-    [cliente, token, isLoading, entrar, criarConta, sair, atualizar],
+    [cliente, token, isLoading, entrar, criarConta, redefinirSenha, sair, atualizar],
   );
 
   return <ClienteAuthContext.Provider value={value}>{children}</ClienteAuthContext.Provider>;
