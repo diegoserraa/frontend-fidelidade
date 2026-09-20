@@ -6,6 +6,7 @@ import { getErrorMessage } from '../../lib/errors';
 import { PasswordField } from '../components/field';
 import { hideSplash } from '../lib/splash';
 import { useClienteAuth } from '../context/cliente-auth';
+import { useEmpresaTemaPublico } from '../hooks/use-empresa-tema-publico';
 
 /** Rota fora do "gate" de autenticação (ver ClienteApp.tsx) — precisa
  *  funcionar tanto pra quem clicou no link deslogado quanto logado. */
@@ -17,6 +18,11 @@ export function RedefinirSenhaPage() {
   const [senha, setSenha] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [erro, setErro] = useState<string | null>(null);
+
+  // Fora do Gate, então precisa pintar a tela com a marca da padaria por
+  // conta própria — sem isso, fica no verde padrão do CSS (ver Gate em
+  // ClienteApp.tsx, que faz isso mesmo antes do login).
+  useEmpresaTemaPublico(true);
 
   // A splash estática de index.html só é escondida pelo Gate normalmente —
   // essa rota não passa por ele, então precisa esconder por conta própria.
