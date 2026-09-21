@@ -1,0 +1,22 @@
+name: ${COMPOSE_PROJECT_NAME:-fidelidade-frontend-dev}
+
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://fidelidade-dev.zdmsolutions.com.br/api}
+        VITE_EMPRESA_ID: ${VITE_EMPRESA_ID:-}
+        VITE_EMPRESA_LOGO_URL: ${VITE_EMPRESA_LOGO_URL:-/pwa-icon.svg}
+        VITE_EMPRESA_SPLASH_BG: ${VITE_EMPRESA_SPLASH_BG:-#ffffff}
+        VITE_VAPID_PUBLIC_KEY: ${VITE_VAPID_PUBLIC_KEY:-}
+    container_name: ${CONTAINER_NAME:-fidelidade-frontend}
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-8082}:80"
+    networks:
+      - shared-net
+
+networks:
+  shared-net:
+    external: true
