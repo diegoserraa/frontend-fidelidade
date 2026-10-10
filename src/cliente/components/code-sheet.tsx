@@ -12,15 +12,17 @@ export function CodeSheet({
   open,
   onClose,
   nome,
+  empresaId,
 }: {
   open: boolean;
   onClose: () => void;
   nome?: string;
+  empresaId: string;
 }) {
   const qr = useQuery({
-    queryKey: ['cliente', 'qr'],
-    queryFn: portalApi.getQr,
-    enabled: open,
+    queryKey: ['cliente', 'qr', empresaId],
+    queryFn: () => portalApi.getQr(empresaId),
+    enabled: open && Boolean(empresaId),
     refetchInterval: open ? 45_000 : false,
     staleTime: 40_000,
   });

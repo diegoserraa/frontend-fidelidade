@@ -456,7 +456,12 @@ export function CartaoPage() {
   return (
     <>
       {body}
-      <CodeSheet open={codeOpen} onClose={() => setCodeOpen(false)} nome={cliente?.nome} />
+      <CodeSheet
+        open={codeOpen}
+        onClose={() => setCodeOpen(false)}
+        nome={cliente?.nome}
+        empresaId={empresa?.empresaId ?? ''}
+      />
     </>
   );
 }

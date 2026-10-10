@@ -60,7 +60,10 @@ export const portalApi = {
   entrarNaEmpresa: (empresaId: string) =>
     clienteRequest<EmpresaVinculo | null>(`/cliente/${empresaId}/entrar`, { method: 'POST' }),
 
-  getQr: () => clienteRequest<QrIdentidade>('/cliente/qr', { method: 'POST' }),
+  /** O QR carimba `empresaId` — só vale pra pontuar nessa padaria, mesmo o
+   *  cliente sendo membro de outras (ver clientes.service.ts no backend). */
+  getQr: (empresaId: string) =>
+    clienteRequest<QrIdentidade>(`/cliente/${empresaId}/qr`, { method: 'POST' }),
 
   getCatalogo: (empresaId: string) =>
     clienteRequest<CatalogoCliente>(`/cliente/${empresaId}/recompensas`),
