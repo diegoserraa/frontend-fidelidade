@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Croissant } from 'lucide-react';
 import { ApiError } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
@@ -17,6 +17,24 @@ export function ClienteLoginPage() {
   const [modo, setModo] = useState<Modo>('entrar');
   const [form, setForm] = useState({ nome: '', cpf: '', telefone: '', email: '', senha: '' });
   const [erro, setErro] = useState<string | null>(null);
+
+  // Avisa JÁ na tela de cadastro se esse CPF tem conta — em vez de só depois
+  // de tentar enviar o formulário e levar um 409 (ver onError do submit
+  // abaixo, que continua existindo como rede de segurança pra quem digita
+  // rápido e envia antes dessa checagem terminar). Debounce pra não disparar
+  // uma requisição a cada tecla; nunca revela o nome do dono, só "existe".
+  const cpfDigitado = onlyDigits(form.cpf);
+  const [cpfParaChecar, setCpfParaChecar] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setCpfParaChecar(cpfDigitado), 500);
+    return () => clearTimeout(t);
+  }, [cpfDigitado]);
+  const cpfExiste = useQuery({
+    queryKey: ['cliente', 'cpf-existe', cpfParaChecar],
+    queryFn: () => portalApi.cpfExiste(cpfParaChecar),
+    enabled: modo === 'criar' && isValidCPF(cpfParaChecar),
+    staleTime: 60_000,
+  });
 
   const submit = useMutation({
     mutationFn: () =>
@@ -124,13 +142,6 @@ export function ClienteLoginPage() {
               ))}
             </div>
 
-            {modo === 'criar' ? (
-              <p className="mx-auto mt-3 max-w-sm text-center text-[12px] leading-relaxed text-fg-subtle">
-                Já é cliente de outra padaria nossa? Não precisa criar outra conta — toque em{' '}
-                <strong className="text-fg-muted">Entrar</strong> e use o mesmo CPF e senha.
-              </p>
-            ) : null}
-
             <form
           className="mx-auto mt-5 flex w-full max-w-sm flex-col gap-3.5"
           onSubmit={(e) => {
@@ -159,6 +170,19 @@ export function ClienteLoginPage() {
             maxLength={14}
             autoComplete="username"
           />
+
+          {modo === 'criar' && cpfExiste.data?.existe ? (
+            <p className="-mt-2 text-[13px] text-primary-subtle-fg">
+              Esse CPF já tem conta em outro estabelecimento nosso — você pode usar a mesma senha.{' '}
+              <button
+                type="button"
+                onClick={() => trocar('entrar')}
+                className="font-semibold underline underline-offset-2"
+              >
+                Entrar
+              </button>
+            </p>
+          ) : null}
 
           {modo === 'criar' ? (
             <Field

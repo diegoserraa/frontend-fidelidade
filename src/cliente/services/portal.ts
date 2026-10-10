@@ -35,6 +35,12 @@ export const portalApi = {
 
   me: () => clienteRequest<ClienteConta>('/auth/cliente/me'),
 
+  /** Só diz se já existe conta pra esse CPF — nunca o nome do dono. Usado
+   *  pra avisar na hora de digitar, em "Criar conta", em vez de só depois
+   *  de tentar enviar o formulário. */
+  cpfExiste: (cpf: string) =>
+    clienteRequest<{ existe: boolean }>(`/auth/cliente/cpf-existe?cpf=${encodeURIComponent(cpf)}`),
+
   /** Resposta é sempre a mesma genérica, exista ou não conta com esse CPF. */
   esqueciSenha: (cpf: string) =>
     clienteRequest<{ mensagem: string }>('/auth/cliente/esqueci-senha', {
