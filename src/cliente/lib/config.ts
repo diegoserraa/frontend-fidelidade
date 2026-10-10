@@ -4,34 +4,60 @@
  * `buildAppQrUrl` em `src/lib/qr.ts`), então a origem do id é, em ordem de
  * prioridade:
  *
- *  1. `/app/<uuid>/...` — o primeiro pedaço do caminho, do QR impresso no
- *     balcão (Configurações → "QR do balcão") ou do QR que o super admin
- *     gera em `/admin` ao cadastrar uma padaria nova. Cada padaria precisa
- *     de um ENDEREÇO distinto de verdade (não só um parâmetro na mesma URL)
- *     — senão o Android trata duas instalações como o mesmo site e a
- *     segunda escaneada abre dentro do ícone já instalado da primeira, em
- *     vez de virar uma instalação separada na tela inicial.
- *  2. `?empresa=<uuid>` na URL — formato antigo, mantido só por
- *     compatibilidade com QRs já impressos antes dessa mudança pra rota
- *     própria por padaria. Reimprimir o "QR do balcão" já gera no formato
- *     novo.
- *  3. `VITE_EMPRESA_ID` (variável de build) — fallback pra um deploy dedicado
+ *  1. `<uuid>.dominio.com/app/...` — SUBDOMÍNIO próprio por padaria. É o
+ *     único jeito que encontramos de o Android tratar duas padarias
+ *     instaladas como apps de verdade separados: mesmo com manifesto/escopo
+ *     diferentes, duas URLs no MESMO domínio (só o caminho mudando) ainda
+ *     batem como "já instalado" — o WebAPK do Android parece identificar o
+ *     pacote pela ORIGEM (domínio), não pelo caminho. Documentação do
+ *     próprio Google recomenda esse caminho pra múltiplos apps no mesmo site.
+ *  2. `/app/<uuid>/...` — formato de caminho (sem subdomínio), usado
+ *     brevemente antes dessa mudança. Mantido só por compatibilidade.
+ *  3. `?empresa=<uuid>` na URL — formato mais antigo ainda (antes do
+ *     caminho próprio), mesma lógica de compatibilidade.
+ *  4. `VITE_EMPRESA_ID` (variável de build) — fallback pra um deploy dedicado
  *     de UMA padaria só (domínio próprio, sem depender de QR nem `/admin`).
  *
- * Qualquer id achado (caminho ou `?empresa=`) é guardado no localStorage pra
- * sobreviver ao cadastro/login e a uma nova visita sem o link.
+ * Qualquer id achado (subdomínio, caminho ou `?empresa=`) é guardado no
+ * localStorage pra sobreviver ao cadastro/login e a uma nova visita sem link.
  *
  * Entrar no programa dessa empresa SEMPRE passa por confirmação explícita do
  * cliente (ver `hooks/use-empresa.ts` / tela em `cartao.tsx`) — nunca
  * acontece só porque a pessoa já estava logada e passou perto do link/QR de
- * uma empresa que não é a dela. Sem nenhum dos três, a tela Cartão mostra
+ * uma empresa que não é a dela. Sem nenhum dos quatro, a tela Cartão mostra
  * "Mostrar meu código" pro atendente vincular no primeiro scan.
  */
 export const EMPRESA_ID_STORAGE_KEY = 'fidelidade_cliente_empresa_id';
 const STORAGE_KEY = EMPRESA_ID_STORAGE_KEY;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function resolveEmpresaId(): { id: string | null; origem: 'path' | 'url' | 'storage' | 'env' | 'nenhuma' } {
+/** Domínio sem o subdomínio da padaria — usado pra montar o endereço de
+ *  OUTRA padaria (trocar/sair, ver use-empresa.ts) a partir de onde estamos
+ *  agora, seja direto no subdomínio dela ou no domínio base com caminho. */
+export function dominioBase(): string {
+  const host = window.location.hostname;
+  const rotulos = host.split('.');
+  if (rotulos.length > 1 && UUID_RE.test(rotulos[0])) {
+    return rotulos.slice(1).join('.');
+  }
+  return host;
+}
+
+function resolveEmpresaId(): {
+  id: string | null;
+  origem: 'subdominio' | 'path' | 'url' | 'storage' | 'env' | 'nenhuma';
+} {
+  try {
+    const rotulos = window.location.hostname.split('.');
+    const doSubdominio = rotulos[0];
+    if (rotulos.length > 1 && UUID_RE.test(doSubdominio)) {
+      localStorage.setItem(STORAGE_KEY, doSubdominio);
+      return { id: doSubdominio, origem: 'subdominio' };
+    }
+  } catch {
+    /* SSR/URL indisponível — ignora */
+  }
+
   try {
     const segmentos = window.location.pathname.split('/').filter(Boolean);
     const daPath = segmentos[0] === 'app' ? segmentos[1] : undefined;
@@ -83,7 +109,9 @@ export const EMPRESA_ID: string | null = resolvido.id;
 if (import.meta.env.DEV) {
   // eslint-disable-next-line no-console
   const log = console;
-  if (resolvido.origem === 'path') {
+  if (resolvido.origem === 'subdominio') {
+    log.info(`[app-cliente] empresa=${EMPRESA_ID} veio do subdomínio — pede confirmação antes de entrar.`);
+  } else if (resolvido.origem === 'path') {
     log.info(`[app-cliente] empresa=${EMPRESA_ID} veio do caminho da URL (QR) — pede confirmação antes de entrar.`);
   } else if (resolvido.origem === 'url') {
     log.info(`[app-cliente] empresa=${EMPRESA_ID} veio do ?empresa= antigo (QR impresso antes da rota própria) — pede confirmação antes de entrar.`);

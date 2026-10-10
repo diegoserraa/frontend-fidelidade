@@ -80,15 +80,21 @@
           // uma) herdaria a marca errada.
           var empresaIdAtual = null;
           try {
-            // 1) /app/<uuid>/... — endereço próprio por padaria (precisa
-            //    disso pro Android tratar cada instalação como um site
-            //    diferente, ver config.ts). 2) ?empresa= — formato antigo,
-            //    QRs impressos antes dessa mudança. 3) cache local.
-            var segmentos = location.pathname.split('/').filter(Boolean);
+            // 1) <uuid>.dominio/app/... — subdomínio próprio por padaria
+            //    (o que faz o Android tratar cada instalação como um app
+            //    separado de verdade, ver config.ts). 2) /app/<uuid>/... —
+            //    formato de caminho, usado brevemente antes do subdomínio.
+            //    3) ?empresa= — formato mais antigo ainda. 4) cache local.
             var UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            var rotulos = location.hostname.split('.');
+            var doSubdominio = rotulos.length > 1 && UUID_RE.test(rotulos[0]) ? rotulos[0] : null;
+            var segmentos = location.pathname.split('/').filter(Boolean);
             var daPath = segmentos[0] === 'app' && UUID_RE.test(segmentos[1]) ? segmentos[1] : null;
             var daUrl = new URLSearchParams(location.search).get('empresa');
-            if (daPath) {
+            if (doSubdominio) {
+              localStorage.setItem('fidelidade_cliente_empresa_id', doSubdominio);
+              empresaIdAtual = doSubdominio;
+            } else if (daPath) {
               localStorage.setItem('fidelidade_cliente_empresa_id', daPath);
               empresaIdAtual = daPath;
             } else if (daUrl) {

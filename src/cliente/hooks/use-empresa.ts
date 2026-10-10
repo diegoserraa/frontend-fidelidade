@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { portalApi } from '../services/portal';
 import { applyEmpresaTheme } from '../lib/theme';
 import { applyEmpresaPwaIdentity } from '../lib/pwa-identity';
-import { EMPRESA_ID, EMPRESA_ID_STORAGE_KEY } from '../lib/config';
+import { dominioBase, EMPRESA_ID, EMPRESA_ID_STORAGE_KEY } from '../lib/config';
 import type { EmpresaVinculo } from '../../types/api';
 
 /**
@@ -119,8 +119,9 @@ export function selecionarEmpresa(empresa: EmpresaVinculo): void {
     /* localStorage indisponível — a troca não persiste, mas não trava a UI */
   }
   applyEmpresaTheme(empresa, empresa.empresaId);
-  // Caminho da NOVA empresa, não appPath() (que reflete a EMPRESA_ID atual,
-  // antes do reload) — precisa ser o endereço próprio dela, senão o
+  // Subdomínio da NOVA empresa (não appPath(), que reflete a EMPRESA_ID
+  // atual antes do reload) — precisa ser o endereço PRÓPRIO dela, senão o
   // Android continua achando que é a mesma instalação de antes.
-  window.location.assign(`/app/${empresa.empresaId}`);
+  const { protocol, port } = window.location;
+  window.location.assign(`${protocol}//${empresa.empresaId}.${dominioBase()}${port ? `:${port}` : ''}/app/`);
 }

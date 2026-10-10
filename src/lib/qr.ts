@@ -55,8 +55,14 @@ export function qrPngDataUri(text: string, size = 640): Promise<string> {
 }
 
 /** URL que o QR do balcão codifica — o app do cliente lê `?empresa=` e já vincula o cadastro a essa empresa. */
+/**
+ * Endereço próprio por padaria (subdomínio) — é o que faz o Android tratar
+ * cada instalação como um app de verdade separado (ver config.ts). Chamado
+ * sempre do painel/admin, que vivem no domínio BASE (nunca num subdomínio de
+ * padaria), então `location.host` aqui já é o domínio certo pra prefixar.
+ */
 export function buildAppQrUrl(empresaId: string): string {
-  return `${window.location.origin}/app/${empresaId}`;
+  return `${window.location.protocol}//${empresaId}.${window.location.host}/app/`;
 }
 
 function escapeHtml(value: string): string {
