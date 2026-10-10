@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  CLIENTE_TOKEN_KEY,
   readClienteToken,
   setClienteUnauthorizedHandler,
   writeClienteToken,
@@ -80,6 +81,20 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
     setClienteUnauthorizedHandler(limparSessao);
     return () => setClienteUnauthorizedHandler(null);
   }, [limparSessao]);
+
+  // Mesmo risco do painel (ver auth-context.tsx): token guardado num único
+  // localStorage, compartilhado entre abas — logar com OUTRO cliente numa
+  // aba sobrescreve o token de qualquer aba que já estava aberta. Recarrega
+  // pra nunca deixar uma ação (ex.: resgate) sair no nome de quem não devia.
+  useEffect(() => {
+    function onStorage(event: StorageEvent) {
+      if (event.key !== CLIENTE_TOKEN_KEY) return;
+      if (event.newValue === token) return;
+      window.location.reload();
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;

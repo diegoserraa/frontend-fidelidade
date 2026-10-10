@@ -89,6 +89,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setUnauthorizedHandler(null);
   }, [logout]);
 
+  // O token fica num único localStorage, compartilhado por TODAS as abas
+  // deste navegador. Sem isto: logar como gestor de outra empresa numa aba
+  // sobrescreve esse valor, e qualquer outra aba ainda aberta (ex.: o
+  // balcão de uma padaria) continua rodando — só que silenciosamente
+  // autenticada como a empresa nova, pontuando compras no nome errado. O
+  // evento `storage` só dispara nas OUTRAS abas (nunca na que fez a
+  // mudança), então recarregar aqui é seguro: nunca interrompe a aba que
+  // de fato está trocando de sessão.
+  useEffect(() => {
+    function onStorage(event: StorageEvent) {
+      if (event.key !== TOKEN_STORAGE_KEY) return;
+      if (event.newValue === token) return;
+      window.location.reload();
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [token]);
+
   // Revalida o usuário sempre que houver token (boot da app ou novo login).
   useEffect(() => {
     if (!token) return;

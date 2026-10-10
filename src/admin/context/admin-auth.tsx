@@ -7,7 +7,12 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { readAdminToken, setAdminUnauthorizedHandler, writeAdminToken } from '../lib/admin-api';
+import {
+  ADMIN_TOKEN_KEY,
+  readAdminToken,
+  setAdminUnauthorizedHandler,
+  writeAdminToken,
+} from '../lib/admin-api';
 import { adminApi } from '../services/admin';
 import type { AdminAutenticado } from '../types';
 
@@ -57,6 +62,19 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     setAdminUnauthorizedHandler(sair);
     return () => setAdminUnauthorizedHandler(null);
   }, [sair]);
+
+  // Mesmo risco do painel de gestor (ver auth-context.tsx): token guardado
+  // num único localStorage, compartilhado entre abas. Recarrega quando ESTE
+  // valor mudar numa outra aba, pra nunca ficar agindo como o dono errado.
+  useEffect(() => {
+    function onStorage(event: StorageEvent) {
+      if (event.key !== ADMIN_TOKEN_KEY) return;
+      if (event.newValue === token) return;
+      window.location.reload();
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
