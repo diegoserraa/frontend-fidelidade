@@ -56,7 +56,7 @@ export function qrPngDataUri(text: string, size = 640): Promise<string> {
 
 /** URL que o QR do balcão codifica — o app do cliente lê `?empresa=` e já vincula o cadastro a essa empresa. */
 export function buildAppQrUrl(empresaId: string): string {
-  return `${window.location.origin}/app?empresa=${empresaId}`;
+  return `${window.location.origin}/app/${empresaId}`;
 }
 
 function escapeHtml(value: string): string {

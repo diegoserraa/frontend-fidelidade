@@ -2,15 +2,16 @@ import { CreditCard, Gift, Receipt, User } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { cn } from '../../lib/utils';
-
-const tabs: { to: string; label: string; icon: LucideIcon; end?: boolean }[] = [
-  { to: '/app', label: 'Cartão', icon: CreditCard, end: true },
-  { to: '/app/recompensas', label: 'Prêmios', icon: Gift },
-  { to: '/app/extrato', label: 'Extrato', icon: Receipt },
-  { to: '/app/perfil', label: 'Perfil', icon: User },
-];
+import { appPath } from '../lib/config';
 
 export function TabBar() {
+  const tabs: { to: string; label: string; icon: LucideIcon; end?: boolean }[] = [
+    { to: appPath(), label: 'Cartão', icon: CreditCard, end: true },
+    { to: appPath('recompensas'), label: 'Prêmios', icon: Gift },
+    { to: appPath('extrato'), label: 'Extrato', icon: Receipt },
+    { to: appPath('perfil'), label: 'Perfil', icon: User },
+  ];
+
   return (
     <nav
       aria-label="Navegação"

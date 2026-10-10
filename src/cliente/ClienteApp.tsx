@@ -13,6 +13,7 @@ import { ExtratoPage } from './pages/extrato';
 import { PerfilPage } from './pages/perfil';
 import { ResgatePage } from './pages/resgate';
 import { RedefinirSenhaPage } from './pages/redefinir-senha';
+import { appPath } from './lib/config';
 
 function TabbedLayout() {
   return (
@@ -65,7 +66,7 @@ function Gate() {
         <Route path="extrato" element={<ExtratoPage />} />
         <Route path="perfil" element={<PerfilPage />} />
       </Route>
-      <Route path="*" element={<Navigate to="/app" replace />} />
+      <Route path="*" element={<Navigate to={appPath()} replace />} />
     </Routes>
   );
 }

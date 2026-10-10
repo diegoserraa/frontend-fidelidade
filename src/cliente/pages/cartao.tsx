@@ -12,6 +12,7 @@ import { ProgressRing } from '../components/progress-ring';
 import { useClienteAuth } from '../context/cliente-auth';
 import { useEmpresaAtual } from '../hooks/use-empresa';
 import { portalApi } from '../services/portal';
+import { appPath } from '../lib/config';
 import { getPendingResgate } from '../lib/pending-resgate';
 import type { EmpresaVinculo } from '../../types/api';
 
@@ -384,7 +385,7 @@ export function CartaoPage() {
           {/* Próximo prêmio */}
           {proximoPremio ? (
             <Link
-              to="/app/recompensas"
+              to={appPath('recompensas')}
               className="flex items-center gap-3.5 rounded-xl border border-border bg-surface px-4 py-3"
             >
               {proximoPremio.tipo === 'quase' ? (
@@ -430,7 +431,7 @@ export function CartaoPage() {
 
           {pendente ? (
             <Link
-              to={`/app/resgate/${pendente.resgateId}`}
+              to={appPath(`resgate/${pendente.resgateId}`)}
               className="flex items-center gap-3 rounded-xl border border-warning/50 bg-warning-subtle px-4 py-3"
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-warning/15 text-warning-fg">

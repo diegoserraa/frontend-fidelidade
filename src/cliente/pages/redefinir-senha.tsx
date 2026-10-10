@@ -5,6 +5,7 @@ import { Croissant } from 'lucide-react';
 import { getErrorMessage } from '../../lib/errors';
 import { PasswordField } from '../components/field';
 import { hideSplash } from '../lib/splash';
+import { appPath } from '../lib/config';
 import { useClienteAuth } from '../context/cliente-auth';
 import { useEmpresaTemaPublico } from '../hooks/use-empresa-tema-publico';
 
@@ -32,7 +33,7 @@ export function RedefinirSenhaPage() {
 
   const submit = useMutation({
     mutationFn: () => redefinirSenha({ token, novaSenha: senha }),
-    onSuccess: () => navigate('/app', { replace: true }),
+    onSuccess: () => navigate(appPath(), { replace: true }),
     onError: (err) => setErro(getErrorMessage(err, 'Não foi possível redefinir a senha.')),
   });
 
@@ -75,7 +76,7 @@ export function RedefinirSenhaPage() {
             </p>
             <button
               type="button"
-              onClick={() => navigate('/app', { replace: true })}
+              onClick={() => navigate(appPath(), { replace: true })}
               className="text-[14px] font-semibold text-primary"
             >
               Voltar para o login

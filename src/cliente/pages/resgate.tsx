@@ -7,6 +7,7 @@ import { useToast } from '../../components/ui/toast';
 import { getErrorMessage } from '../../lib/errors';
 import { portalApi } from '../services/portal';
 import { BigCode } from '../components/big-code';
+import { appPath } from '../lib/config';
 import { getPendingResgate, setPendingResgate } from '../lib/pending-resgate';
 
 const num = new Intl.NumberFormat('pt-BR');
@@ -55,7 +56,7 @@ export function ResgatePage() {
     mutationFn: () => portalApi.cancelarResgate(id),
     onSuccess: () => {
       setPendingResgate(null);
-      navigate('/app/recompensas', { replace: true });
+      navigate(appPath('recompensas'), { replace: true });
     },
     onError: (err) => toast.error('Não foi possível cancelar', getErrorMessage(err)),
   });
@@ -78,7 +79,7 @@ export function ResgatePage() {
         icon={<CircleCheck className="size-10" />}
         titulo="Prêmio liberado!"
         linha={`${titulo}  ·  −${num.format(custo)} pontos`}
-        onVoltar={() => navigate('/app', { replace: true })}
+        onVoltar={() => navigate(appPath(), { replace: true })}
       />
     );
   }
@@ -90,7 +91,7 @@ export function ResgatePage() {
         icon={<XCircle className="size-10" />}
         titulo={status === 'expirado' ? 'O código expirou' : 'Resgate cancelado'}
         linha="Sem problema — você pode pedir de novo na tela de prêmios."
-        onVoltar={() => navigate('/app/recompensas', { replace: true })}
+        onVoltar={() => navigate(appPath('recompensas'), { replace: true })}
       />
     );
   }

@@ -70,8 +70,16 @@ function AppRoutes() {
   return (
     <Suspense fallback={<LoadingSpinner fullScreen />}>
       <Routes>
-        {/* App do cliente (PWA) — auth e shell próprios, isolado do painel */}
+        {/* App do cliente (PWA) — auth e shell próprios, isolado do painel.
+            Rota própria por padaria (/app/:empresaId/...) além da genérica
+            (/app/..., usada pelo deploy single-tenant de VITE_EMPRESA_ID):
+            cada padaria precisa de um endereço distinto de verdade — não só
+            um ?empresa= na mesma URL — senão o Android trata as instalações
+            como o mesmo site e passa a abrir a segunda padaria escaneada
+            dentro do ícone já instalado da primeira, em vez de oferecer uma
+            instalação separada. */}
         <Route path="/app/*" element={<ClienteApp />} />
+        <Route path="/app/:empresaId/*" element={<ClienteApp />} />
         {/* Área do dono da plataforma (cadastro de empresas) — auth própria */}
         <Route path="/admin/*" element={<AdminApp />} />
         <Route

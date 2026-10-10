@@ -116,5 +116,8 @@ export function selecionarEmpresa(empresa: EmpresaVinculo): void {
     /* localStorage indisponível — a troca não persiste, mas não trava a UI */
   }
   applyEmpresaTheme(empresa, empresa.empresaId);
-  window.location.assign('/app');
+  // Caminho da NOVA empresa, não appPath() (que reflete a EMPRESA_ID atual,
+  // antes do reload) — precisa ser o endereço próprio dela, senão o
+  // Android continua achando que é a mesma instalação de antes.
+  window.location.assign(`/app/${empresa.empresaId}`);
 }

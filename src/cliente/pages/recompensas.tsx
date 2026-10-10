@@ -10,6 +10,7 @@ import { cn } from '../../lib/utils';
 import { Screen } from '../components/screen';
 import { useEmpresaAtual } from '../hooks/use-empresa';
 import { portalApi } from '../services/portal';
+import { appPath } from '../lib/config';
 import { setPendingResgate } from '../lib/pending-resgate';
 import type { RecompensaCliente } from '../../types/api';
 
@@ -45,7 +46,7 @@ export function RecompensasPage() {
         custoPontos: res.recompensa.custoPontos,
         expiraEm: res.expiraEm,
       });
-      navigate(`/app/resgate/${res.resgateId}`);
+      navigate(appPath(`resgate/${res.resgateId}`));
     },
     onError: (err) => toast.error('Não foi possível resgatar', getErrorMessage(err)),
     onSettled: (_data, _error, recompensa) => {
