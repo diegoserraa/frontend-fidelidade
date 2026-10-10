@@ -54,6 +54,9 @@ export interface EmpresaConfig {
   cor_texto?: string | null;
   /** Cor de fundo das telas do app do cliente. */
   cor_fundo?: string | null;
+  /** Fundo do ícone/splash nativa de instalação do PWA — diferente de
+   *  cor_fundo (telas dentro do app). null = segue cor_primaria. */
+  cor_icone_fundo?: string | null;
   exibir_total_gasto: boolean;
 }
 

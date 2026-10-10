@@ -39,6 +39,7 @@ const DEFAULTS = {
   corSecundaria: '#f59e0b',
   corTexto: '#ffffff',
   corFundo: '#ffffff',
+  corIconeFundo: '#059669',
   logoUrl: '',
   exibirTotalGasto: true,
 };
@@ -54,6 +55,9 @@ function formFromConfig(config: EmpresaConfig): BrandForm {
     corTexto:
       config.cor_texto || readableTextColor(normalizeHex(primaria) ?? DEFAULTS.corPrimaria),
     corFundo: config.cor_fundo || DEFAULTS.corFundo,
+    // Sem configuração própria ainda, começa igual à primária (mesmo
+    // fallback que o backend aplica na geração do ícone/manifesto).
+    corIconeFundo: config.cor_icone_fundo || primaria,
     logoUrl: config.logo_url ?? '',
     exibirTotalGasto: config.exibir_total_gasto,
   };
@@ -65,6 +69,7 @@ function sameForm(a: BrandForm, b: BrandForm): boolean {
     a.corSecundaria === b.corSecundaria &&
     a.corTexto === b.corTexto &&
     a.corFundo === b.corFundo &&
+    a.corIconeFundo === b.corIconeFundo &&
     a.logoUrl === b.logoUrl &&
     a.exibirTotalGasto === b.exibirTotalGasto
   );
@@ -130,8 +135,10 @@ function BrandingStudio({
     secundaria: HEX_RE.test(form.corSecundaria),
     texto: HEX_RE.test(form.corTexto),
     fundo: HEX_RE.test(form.corFundo),
+    iconeFundo: HEX_RE.test(form.corIconeFundo),
   };
-  const allValid = valid.primaria && valid.secundaria && valid.texto && valid.fundo;
+  const allValid =
+    valid.primaria && valid.secundaria && valid.texto && valid.fundo && valid.iconeFundo;
   const dirty = !sameForm(form, initial);
   const isDefault = sameForm(form, DEFAULTS);
 
@@ -148,6 +155,7 @@ function BrandingStudio({
         cor_secundaria: form.corSecundaria,
         cor_texto: form.corTexto,
         cor_fundo: form.corFundo,
+        cor_icone_fundo: form.corIconeFundo,
         logo_url: form.logoUrl.trim() || undefined,
         exibir_total_gasto: form.exibirTotalGasto,
       }),
@@ -196,7 +204,7 @@ function BrandingStudio({
 
           <Section
             title="Cores"
-            hint="Primária: botões e saldo · Secundária: selos · Texto: sobre a primária · Fundo: telas do app e splash de instalação."
+            hint="Primária: botões e saldo · Secundária: selos · Texto: sobre a primária · Fundo: telas do app."
           >
             <div className="space-y-2.5">
               <ColorRow
@@ -234,6 +242,20 @@ function BrandingStudio({
                 value={form.corFundo}
                 onChange={(value) => patch({ corFundo: value })}
                 invalid={!valid.fundo}
+              />
+            </div>
+          </Section>
+
+          <Section
+            title="Ícone do app instalado"
+            hint="Fundo do ícone/tela de abertura quando o cliente instala o app no celular — não é a mesma cor de 'Fundo' acima (aquela é só pras telas dentro do app)."
+          >
+            <div className="space-y-2.5">
+              <ColorRow
+                label="Fundo"
+                value={form.corIconeFundo}
+                onChange={(value) => patch({ corIconeFundo: value })}
+                invalid={!valid.iconeFundo}
                 trailing={
                   eyeDropper ? (
                     <button
@@ -241,7 +263,7 @@ function BrandingStudio({
                       onClick={async () => {
                         try {
                           const resultado = await new eyeDropper().open();
-                          patch({ corFundo: resultado.sRGBHex });
+                          patch({ corIconeFundo: resultado.sRGBHex });
                         } catch {
                           // cancelado (Esc) — não faz nada
                         }

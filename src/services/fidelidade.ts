@@ -58,6 +58,7 @@ export const fidelidadeApi = {
         corSecundaria: data.cor_secundaria,
         corTexto: data.cor_texto,
         corFundo: data.cor_fundo,
+        corIconeFundo: data.cor_icone_fundo,
         exibirTotalGasto: data.exibir_total_gasto,
       }),
     }),
