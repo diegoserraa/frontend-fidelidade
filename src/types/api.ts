@@ -78,8 +78,6 @@ export interface IdentificacaoCliente {
   telefone: string | null;
   saldoPontos: number;
   status: 'ativo' | 'inativo';
-  /** `true` quando o vínculo com esta empresa foi criado agora, na leitura. */
-  novoVinculo: boolean;
 }
 
 export type ResgateStatus = 'pendente' | 'confirmado' | 'expirado' | 'cancelado';

@@ -563,14 +563,7 @@ function ClienteResumo({ cliente }: { cliente: IdentificacaoCliente }) {
       <div className="flex items-center gap-3">
         <Initials name={cliente.nome} className="size-12 text-base" />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="truncate text-base font-semibold text-fg">{cliente.nome}</p>
-            {cliente.novoVinculo ? (
-              <span className="rounded-md bg-info-subtle px-1.5 py-0.5 text-[11px] font-medium text-info-fg">
-                novo cliente
-              </span>
-            ) : null}
-          </div>
+          <p className="truncate text-base font-semibold text-fg">{cliente.nome}</p>
           <p className="text-xs text-fg-subtle">{cliente.cpfMascarado ?? 'CPF não informado'}</p>
         </div>
         <div className="shrink-0 text-right">
