@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, Check, Download, Gift, Printer, RotateCcw, Sparkles, Wand2 } from 'lucide-react';
+import { Bell, Check, Download, Gift, Pipette, Printer, RotateCcw, Sparkles, Wand2 } from 'lucide-react';
 import { ErrorState } from '../components/shared/error-state';
 import { PageHeader } from '../components/shared/page-header';
 import { Button } from '../components/ui/button';
@@ -19,6 +19,20 @@ import type { Empresa, EmpresaConfig } from '../types/api';
 
 const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const LOGO_MAX = 600;
+
+/**
+ * API nativa do navegador (Chrome/Edge) que deixa a pessoa clicar em
+ * QUALQUER ponto da tela — inclusive a prévia da logo aqui do lado — e pega
+ * o pixel exato como cor. Ainda não existe no TypeScript DOM lib nem em
+ * todo navegador (Firefox/Safari não têm), por isso o cast manual e a
+ * checagem de suporte antes de oferecer o botão.
+ */
+type EyeDropperResult = { sRGBHex: string };
+type EyeDropperCtor = new () => { open: () => Promise<EyeDropperResult> };
+
+function getEyeDropper(): EyeDropperCtor | undefined {
+  return (window as unknown as { EyeDropper?: EyeDropperCtor }).EyeDropper;
+}
 
 const DEFAULTS = {
   corPrimaria: '#059669',
@@ -107,6 +121,7 @@ function BrandingStudio({
   const [form, setForm] = useState(initial);
   const [logoBroken, setLogoBroken] = useState(false);
   const [screen, setScreen] = useState<ScreenKey>('cartao');
+  const eyeDropper = useMemo(() => getEyeDropper(), []);
 
   const patch = (next: Partial<BrandForm>) => setForm((current) => ({ ...current, ...next }));
 
@@ -181,7 +196,7 @@ function BrandingStudio({
 
           <Section
             title="Cores"
-            hint="Primária: botões e saldo · Secundária: selos · Texto: sobre a primária · Fundo: telas do app."
+            hint="Primária: botões e saldo · Secundária: selos · Texto: sobre a primária · Fundo: telas do app e splash de instalação."
           >
             <div className="space-y-2.5">
               <ColorRow
@@ -219,7 +234,34 @@ function BrandingStudio({
                 value={form.corFundo}
                 onChange={(value) => patch({ corFundo: value })}
                 invalid={!valid.fundo}
+                trailing={
+                  eyeDropper ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const resultado = await new eyeDropper().open();
+                          patch({ corFundo: resultado.sRGBHex });
+                        } catch {
+                          // cancelado (Esc) — não faz nada
+                        }
+                      }}
+                      className="inline-flex h-9 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-fg-muted transition-colors hover:bg-surface-muted hover:text-fg"
+                      title="Pegar essa cor de qualquer ponto da tela (ex.: o fundo da sua logo, na prévia ao lado)"
+                    >
+                      <Pipette className="size-3.5" />
+                      Pingar
+                    </button>
+                  ) : undefined
+                }
               />
+              {showLogo ? (
+                <p className="pl-20.5 text-[11px] leading-snug text-fg-subtle">
+                  {eyeDropper
+                    ? 'Dica: se a sua logo já tem um fundo sólido (não transparente), clique em "Pingar" e depois na própria logo na prévia — assim o ícone do app instalado fica com a mesma cor, sem parecer um quadrado dentro do outro.'
+                    : 'Dica: se a sua logo já tem um fundo sólido, use aqui a mesma cor do fundo dela — assim o ícone do app instalado fica igual, sem parecer um quadrado dentro do outro.'}
+                </p>
+              ) : null}
             </div>
           </Section>
 
