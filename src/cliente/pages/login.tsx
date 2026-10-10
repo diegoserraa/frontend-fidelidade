@@ -124,6 +124,13 @@ export function ClienteLoginPage() {
               ))}
             </div>
 
+            {modo === 'criar' ? (
+              <p className="mx-auto mt-3 max-w-sm text-center text-[12px] leading-relaxed text-fg-subtle">
+                Já é cliente de outra padaria nossa? Não precisa criar outra conta — toque em{' '}
+                <strong className="text-fg-muted">Entrar</strong> e use o mesmo CPF e senha.
+              </p>
+            ) : null}
+
             <form
           className="mx-auto mt-5 flex w-full max-w-sm flex-col gap-3.5"
           onSubmit={(e) => {

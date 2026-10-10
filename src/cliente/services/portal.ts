@@ -1,4 +1,5 @@
 import { clienteRequest } from '../lib/cliente-api';
+import { EMPRESA_ID } from '../lib/config';
 import type {
   CatalogoCliente,
   ClienteConta,
@@ -16,16 +17,20 @@ export const portalApi = {
   getEmpresaPublica: (empresaId: string) =>
     clienteRequest<EmpresaPublica>(`/empresa/${empresaId}/publico`),
 
+  // empresaId vai junto (quando dá pra identificar, ver config.ts) pra
+  // sessão única no backend ser por PADARIA, não global — senão logar no
+  // app de uma padaria derrubaria a sessão já aberta no de outra, mesmo
+  // sendo o mesmo aparelho/pessoa (ver clienteAuth.service.ts).
   registrar: (input: { nome: string; cpf: string; senha: string; telefone?: string; email?: string }) =>
     clienteRequest<ClienteLoginResponse>('/auth/cliente/registrar', {
       method: 'POST',
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, empresaId: EMPRESA_ID }),
     }),
 
   login: (input: { cpf: string; senha: string }) =>
     clienteRequest<ClienteLoginResponse>('/auth/cliente/login', {
       method: 'POST',
-      body: JSON.stringify(input),
+      body: JSON.stringify({ ...input, empresaId: EMPRESA_ID }),
     }),
 
   me: () => clienteRequest<ClienteConta>('/auth/cliente/me'),
