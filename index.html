@@ -89,6 +89,11 @@
             }
           } catch (e) {}
           if (!empresaIdAtual) empresaIdAtual = '%VITE_EMPRESA_ID%' || null;
+          // Exposto pro script do <body> reaproveitar (ver ali embaixo) — o
+          // <link rel="manifest"> só existe no DOM depois que o <head> inteiro
+          // terminou de ser inserido (o plugin de PWA injeta a tag dele por
+          // último), então a troca do href precisa rodar depois daqui.
+          window.__empresaIdAtual = empresaIdAtual;
 
           // A aba do navegador no app do cliente usa a logo da padaria, não o
           // ícone genérico do Fideliza+ (esse continua servindo o painel em /).
@@ -134,6 +139,21 @@
           if (!location.pathname.startsWith('/app')) return;
           document.getElementById('app-splash').style.display = 'flex';
           window.__splashShownAt = Date.now();
+        } catch (e) {}
+      })();
+      // Manifesto do PWA gerado na hora pelo backend (ver GET /api/manifest)
+      // com a logo/cor certas da padaria — troca o <link> estático (genérico,
+      // o mesmo pra qualquer padaria) por essa versão antes de o navegador
+      // precisar dele pra instalar (que não é imediato no load, dá tempo).
+      (function () {
+        try {
+          if (!location.pathname.startsWith('/app')) return;
+          var link = document.querySelector('link[rel="manifest"]');
+          if (!link) return;
+          var empresaIdAtual = window.__empresaIdAtual;
+          var url = '%VITE_API_URL%/manifest' + (empresaIdAtual ? '?empresa=' + encodeURIComponent(empresaIdAtual) : '');
+          link.setAttribute('href', url);
+          link.setAttribute('crossorigin', 'anonymous');
         } catch (e) {}
       })();
     </script>
