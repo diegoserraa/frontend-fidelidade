@@ -44,8 +44,17 @@ export function InstallPrompt() {
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
-  if (dismissed || isStandalone()) return null;
-  const iosFallback = isIos() && !deferred;
+  if (dismissed) return null;
+  // No Android/desktop, `deferred` (evento nativo) já é o sinal certo — o
+  // Chrome só dispara `beforeinstallprompt` quando ESTE escopo (padaria)
+  // realmente não está instalado, mesmo rodando dentro do app JÁ instalado
+  // de outra padaria. Checar `isStandalone()` aqui esconderia o botão de
+  // instalar a padaria B só por já existir uma padaria A instalada.
+  // No iPhone não existe esse evento — sem sinal melhor, usa `isStandalone()`
+  // como aproximação (aceita o raro caso de duas padarias no iOS não
+  // detectar perfeitamente; é uma limitação do iOS, não desta checagem).
+  const standalone = isStandalone();
+  const iosFallback = isIos() && !deferred && !standalone;
   if (!deferred && !iosFallback) return null;
 
   const close = () => {
