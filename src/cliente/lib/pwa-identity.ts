@@ -1,5 +1,3 @@
-import { normalizeHex } from '../../lib/color';
-
 /**
  * Campos de marca que tanto `EmpresaPublica` (tela de login) quanto
  * `EmpresaVinculo` (cliente logado) fornecem.
@@ -10,17 +8,6 @@ type BrandingSource = {
   corPrimaria?: string | null;
   corFundo?: string | null;
 };
-
-let objectUrl: string | null = null;
-
-function iconType(url: string): string | undefined {
-  const clean = url.split(/[?#]/)[0].toLowerCase();
-  if (clean.endsWith('.png')) return 'image/png';
-  if (clean.endsWith('.jpg') || clean.endsWith('.jpeg')) return 'image/jpeg';
-  if (clean.endsWith('.svg')) return 'image/svg+xml';
-  if (clean.endsWith('.webp')) return 'image/webp';
-  return undefined;
-}
 
 function upsertLink(rel: string): HTMLLinkElement {
   let el = document.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
@@ -62,10 +49,17 @@ function imagemCarrega(url: string): Promise<boolean> {
 }
 
 /**
- * Troca, em runtime, o ícone e o nome do PWA pelos que a padaria cadastrou no
- * painel (logo + cores). Roda já na tela de login porque o sistema operacional
+ * Troca, em runtime, o ícone (iOS) e o nome do PWA pelos que a padaria
+ * cadastrou no painel. Roda já na tela de login porque o sistema operacional
  * congela o ícone no momento em que a pessoa instala — depois disso, só um
  * reinstalar pega a logo nova.
+ *
+ * O `<link rel="manifest">` NÃO é tocado aqui: o manifesto (ícone composto
+ * com fundo + cores certas, usado pela instalação nativa no Android/Chrome)
+ * já vem pronto do backend por empresa (ver GET /api/manifest, referenciado
+ * em index.html) — gerar um segundo manifesto aqui por cima, via blob, foi o
+ * bug que fazia a instalação usar a logo crua (sem fundo) e a cor errada
+ * mesmo com o backend certo.
  *
  * Sem `logoUrl` configurada, mantém o ícone padrão do build.
  */
@@ -78,57 +72,12 @@ export function applyEmpresaPwaIdentity(src: BrandingSource): void {
   if (nome) upsertMeta('apple-mobile-web-app-title').content = nome;
   if (!logo) return;
 
-  // Só troca o ícone (iOS e manifesto) se a logo cadastrada carregar de
-  // verdade — senão mantém o ícone padrão do build em vez de ficar sem ícone.
+  // Só troca o ícone do iOS se a logo cadastrada carregar de verdade — senão
+  // mantém o ícone padrão do build em vez de ficar sem ícone.
   void imagemCarrega(logo).then((ok) => {
     if (!ok || !document.head) return;
-    aplicarIcone(logo, nome, src);
+    // iOS usa o apple-touch-icon no "Adicionar à Tela de Início" (não lê o
+    // manifesto pra isso).
+    upsertLink('apple-touch-icon').href = logo;
   });
-}
-
-function aplicarIcone(logo: string, nome: string, src: BrandingSource): void {
-  // iOS usa o apple-touch-icon no "Adicionar à Tela de Início".
-  upsertLink('apple-touch-icon').href = logo;
-
-  const manifestLink = document.head.querySelector<HTMLLinkElement>('link[rel="manifest"]');
-  if (!manifestLink) return;
-
-  const brand = normalizeHex(src.corPrimaria ?? '') ?? '#059669';
-  const background = normalizeHex(src.corFundo ?? '') ?? '#ffffff';
-  const type = iconType(logo);
-  const icon = (sizes: string, purpose: string) => ({
-    src: logo,
-    sizes,
-    purpose,
-    ...(type ? { type } : {}),
-  });
-
-  const manifest = {
-    id: '/app/',
-    name: nome || 'Meu Cartão de Fidelidade',
-    short_name: (nome || 'Meus Pontos').slice(0, 12),
-    description: 'Seu cartão de fidelidade, recompensas e extrato de pontos.',
-    start_url: '/app/',
-    scope: '/',
-    display: 'standalone',
-    orientation: 'portrait',
-    theme_color: brand,
-    background_color: background,
-    icons: [
-      icon('192x192', 'any'),
-      icon('512x512', 'any'),
-      icon('any', 'maskable'),
-    ],
-  };
-
-  try {
-    const next = URL.createObjectURL(
-      new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }),
-    );
-    manifestLink.href = next;
-    if (objectUrl) URL.revokeObjectURL(objectUrl);
-    objectUrl = next;
-  } catch {
-    /* Blob/URL indisponível — mantém o manifesto do build */
-  }
 }
