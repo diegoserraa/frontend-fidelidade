@@ -172,12 +172,28 @@ export function PerfilPage() {
   const toast = useToast();
   const [confirmarExclusao, setConfirmarExclusao] = useState(false);
 
+  // Vinculado em mais de uma padaria: sair daqui remove só o vínculo (e o
+  // histórico/pontos) com a ATUAL, as outras continuam intactas — era isso
+  // que estava errado antes (apagava tudo de uma vez, de qualquer padaria).
+  // Só quando esta é a última padaria é que "excluir" é de fato a conta
+  // inteira (o backend apaga o login junto nesse caso).
+  const outrasEmpresas = empresas.filter((e) => e.empresaId !== empresa?.empresaId);
+  const ultimaPadaria = outrasEmpresas.length === 0;
+
   const excluir = useMutation({
-    mutationFn: () => portalApi.excluirConta(),
+    mutationFn: () => {
+      if (!empresa) throw new Error('Nenhuma padaria selecionada.');
+      return portalApi.sairDaEmpresa(empresa.empresaId);
+    },
     onSuccess: () => {
       setPendingResgate(null);
-      toast.success('Conta excluída');
-      sair();
+      if (ultimaPadaria) {
+        toast.success('Conta excluída');
+        sair();
+      } else {
+        toast.success(`Você saiu de ${empresa?.nome ?? 'esta padaria'}`);
+        selecionarEmpresa(outrasEmpresas[0]);
+      }
     },
     onError: (err) => toast.error('Não foi possível excluir', getErrorMessage(err)),
   });
@@ -213,15 +229,19 @@ export function PerfilPage() {
           className="mx-auto inline-flex items-center gap-1.5 py-1.5 text-[13px] font-semibold text-danger-fg"
         >
           <Trash2 className="size-3.5" />
-          Excluir minha conta
+          {ultimaPadaria ? 'Excluir minha conta' : `Sair de ${empresa?.nome ?? 'esta padaria'}`}
         </button>
       </div>
 
       <ConfirmDialog
         open={confirmarExclusao}
         onOpenChange={setConfirmarExclusao}
-        title="Excluir minha conta"
-        description="Sua conta e todo o histórico de pontos serão apagados para sempre. Não dá para desfazer."
+        title={ultimaPadaria ? 'Excluir minha conta' : `Sair de ${empresa?.nome ?? 'esta padaria'}`}
+        description={
+          ultimaPadaria
+            ? 'Sua conta e todo o histórico de pontos serão apagados para sempre. Não dá para desfazer.'
+            : `Seu vínculo, pontos e histórico com ${empresa?.nome ?? 'esta padaria'} serão apagados para sempre — as outras padarias que você participa não são afetadas. Não dá para desfazer.`
+        }
         confirmLabel="Sim, excluir"
         loading={excluir.isPending}
         onConfirm={() => excluir.mutate()}

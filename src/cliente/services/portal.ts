@@ -43,7 +43,12 @@ export const portalApi = {
       body: JSON.stringify(input),
     }),
 
-  excluirConta: () => clienteRequest<void>('/auth/cliente/me', { method: 'DELETE' }),
+  /** Sai só da padaria `empresaId` — histórico/pontos só dela somem. Se era a
+   *  última padaria vinculada, o cadastro global (login) também é apagado
+   *  (ver sairDaEmpresa no backend); qualquer outra padaria vinculada não é
+   *  afetada. */
+  sairDaEmpresa: (empresaId: string) =>
+    clienteRequest<void>(`/cliente/${empresaId}`, { method: 'DELETE' }),
 
   /** Invalida a sessão no servidor (não só localmente) — evita que um token
    *  esquecido logado em outro aparelho continue valendo após o logout. */
