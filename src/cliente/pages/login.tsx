@@ -122,7 +122,7 @@ export function ClienteLoginPage() {
         </div>
 
         {modo === 'recuperar' ? (
-          <RecuperarSenhaForm onVoltar={() => trocar('entrar')} />
+          <RecuperarSenhaForm onVoltar={() => trocar('entrar')} cpfInicial={form.cpf} />
         ) : (
           <>
             {/* alternador */}
@@ -173,7 +173,7 @@ export function ClienteLoginPage() {
 
           {modo === 'criar' && cpfExiste.data?.existe ? (
             <p className="-mt-2 text-[13px] text-primary-subtle-fg">
-              Esse CPF já tem conta em outro estabelecimento nosso — você pode usar a mesma senha.{' '}
+              Esse CPF já tem conta. Digite sua senha em{' '}
               <button
                 type="button"
                 onClick={() => trocar('entrar')}
@@ -181,6 +181,15 @@ export function ClienteLoginPage() {
               >
                 Entrar
               </button>
+              , ou toque em{' '}
+              <button
+                type="button"
+                onClick={() => trocar('recuperar')}
+                className="font-semibold underline underline-offset-2"
+              >
+                Esqueci minha senha
+              </button>{' '}
+              se não lembrar.
             </p>
           ) : null}
 
@@ -262,8 +271,8 @@ export function ClienteLoginPage() {
   );
 }
 
-function RecuperarSenhaForm({ onVoltar }: { onVoltar: () => void }) {
-  const [cpf, setCpf] = useState('');
+function RecuperarSenhaForm({ onVoltar, cpfInicial }: { onVoltar: () => void; cpfInicial?: string }) {
+  const [cpf, setCpf] = useState(cpfInicial ?? '');
   const [erro, setErro] = useState<string | null>(null);
   const [enviado, setEnviado] = useState(false);
 
