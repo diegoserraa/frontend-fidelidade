@@ -120,11 +120,8 @@ export function CartaoPage() {
     isError,
     refetch,
     precisaConfirmarEntrada,
-    empresaParaConfirmar,
-    carregandoEmpresaParaConfirmar,
-    confirmarEntrada,
-    confirmandoEntrada,
-    erroConfirmarEntrada,
+    tentarEntrarDeNovo,
+    erroAoEntrar,
   } = useEmpresaAtual({
     refetchInterval: codeOpen ? 2_000 : 3_000,
     staleTime: 0,
@@ -221,45 +218,20 @@ export function CartaoPage() {
       </Screen>
     );
   } else if (precisaConfirmarEntrada) {
+    // Entra sozinho (ver use-empresa.ts) — essa tela só aparece no instante
+    // entre abrir o app e a chamada terminar, ou se ela falhar.
     body = (
       <Screen>
-        <div className="mt-10 flex flex-col items-center gap-4 text-center">
-          {carregandoEmpresaParaConfirmar ? (
-            <LoadingSpinner label="Carregando…" />
-          ) : (
+        <div className="mt-20 flex flex-col items-center gap-4 text-center">
+          {erroAoEntrar ? (
             <>
-              {empresaParaConfirmar?.logoUrl ? (
-                <img
-                  src={empresaParaConfirmar.logoUrl}
-                  alt=""
-                  className="size-16 rounded-2xl object-cover"
-                />
-              ) : (
-                <span className="flex size-16 items-center justify-center rounded-2xl bg-primary-subtle text-primary-subtle-fg">
-                  <Store className="size-7" />
-                </span>
-              )}
-              <div>
-                <p className="text-[17px] font-bold text-fg">
-                  Entrar no programa de fidelidade{' '}
-                  {empresaParaConfirmar?.nome ? `da ${empresaParaConfirmar.nome}` : ''}?
-                </p>
-                <p className="mt-1.5 text-[14px] leading-relaxed text-fg-muted">
-                  Você vai começar a juntar pontos aqui com a conta que já usa. Isso não mexe no seu
-                  cadastro em nenhuma outra padaria.
-                </p>
-              </div>
-              <Button
-                className="mt-1 h-12 w-full text-[15px] font-bold"
-                disabled={confirmandoEntrada}
-                onClick={confirmarEntrada}
-              >
-                {confirmandoEntrada ? 'Entrando…' : 'Entrar no programa'}
+              <p className="text-[14px] text-fg-muted">Não foi possível entrar no programa. Tente de novo.</p>
+              <Button className="h-11" onClick={tentarEntrarDeNovo}>
+                Tentar de novo
               </Button>
-              {erroConfirmarEntrada ? (
-                <p className="text-[13px] text-danger-fg">Não foi possível entrar. Tente de novo.</p>
-              ) : null}
             </>
+          ) : (
+            <LoadingSpinner label="Preparando sua conta…" />
           )}
         </div>
       </Screen>

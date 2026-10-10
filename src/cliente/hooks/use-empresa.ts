@@ -9,11 +9,13 @@ import type { EmpresaVinculo } from '../../types/api';
 /**
  * Padaria "atual" do cliente (o app assume UMA padaria).
  *
- * - `VITE_EMPRESA_ID`/`?empresa=` definido e o cliente ainda não tem vínculo:
- *   `precisaConfirmarEntrada` fica true — quem chama decide como pedir a
- *   confirmação (não entra sozinho: um cliente já logado que só passa pelo
- *   link/QR de outra padaria não pode virar membro dela sem um toque
- *   explícito, ver `ConfirmarEntradaScreen` em cartao.tsx).
+ * - `EMPRESA_ID` definido (vem do endereço /app/<id>/..., próprio de CADA
+ *   padaria — ver config.ts) e o cliente ainda não tem vínculo: entra
+ *   automaticamente (`precisaConfirmarEntrada`/`entrar` abaixo), sem pedir
+ *   toque de confirmação. Antes exigia confirmação explícita porque uma URL
+ *   compartilhada (`?empresa=`) podia ser aberta sem intenção; agora, como
+ *   cada padaria tem endereço/ícone PRÓPRIO (só se chega até ele escaneando
+ *   o QR específico dela), estar nesse endereço já é a intenção.
  * - Senão: usa o primeiro vínculo que existir.
  *
  * Aplica o tema da padaria assim que os dados chegam.
@@ -46,15 +48,6 @@ export function useEmpresaAtual(opts?: { refetchInterval?: number; staleTime?: n
 
   const precisaConfirmarEntrada = Boolean(EMPRESA_ID) && query.isSuccess && !configurada;
 
-  // Branding de quem ainda não é vínculo (não vem em /cliente/empresas) — só
-  // busca quando realmente precisa mostrar a tela de confirmação.
-  const publica = useQuery({
-    queryKey: ['cliente', 'empresa-publica', EMPRESA_ID],
-    queryFn: () => portalApi.getEmpresaPublica(EMPRESA_ID as string),
-    enabled: precisaConfirmarEntrada,
-    staleTime: 60_000,
-  });
-
   const entrar = useMutation({
     mutationFn: () => portalApi.entrarNaEmpresa(EMPRESA_ID as string),
     onSuccess: (vinculo) => {
@@ -68,6 +61,18 @@ export function useEmpresaAtual(opts?: { refetchInterval?: number; staleTime?: n
       void queryClient.invalidateQueries({ queryKey: ['cliente', 'empresas'] });
     },
   });
+
+  // Entra sozinho assim que percebe que falta vínculo com a padaria deste
+  // endereço — ver comentário no topo do arquivo sobre por que não precisa
+  // mais de confirmação. `isPending`/`isError` na guarda evitam chamar de
+  // novo enquanto já está em andamento ou depois de falhar (cartao.tsx
+  // mostra um botão de tentar de novo nesse caso).
+  useEffect(() => {
+    if (precisaConfirmarEntrada && !entrar.isPending && !entrar.isError) {
+      entrar.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [precisaConfirmarEntrada, entrar.isPending, entrar.isError]);
 
   useEffect(() => {
     if (empresa) {
@@ -87,11 +92,9 @@ export function useEmpresaAtual(opts?: { refetchInterval?: number; staleTime?: n
     refetch: query.refetch,
 
     precisaConfirmarEntrada,
-    empresaParaConfirmar: publica.data,
-    carregandoEmpresaParaConfirmar: publica.isLoading,
-    confirmarEntrada: () => entrar.mutate(),
-    confirmandoEntrada: entrar.isPending,
-    erroConfirmarEntrada: entrar.isError,
+    tentarEntrarDeNovo: () => entrar.mutate(),
+    entrando: entrar.isPending,
+    erroAoEntrar: entrar.isError,
   };
 }
 
