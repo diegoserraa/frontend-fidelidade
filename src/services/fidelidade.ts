@@ -166,6 +166,8 @@ export const fidelidadeApi = {
     valorPorPonto?: number;
     pontosPorCiclo?: number;
     ativo?: boolean;
+    /** null = volta pro padrão ("Pãozinho"/"Baguete"/"Mestre Padeiro"). */
+    niveis?: { nome: string; min: number }[] | null;
   }) =>
     apiRequest<ProgramaFidelidade>('/programa-fidelidade', {
       method: 'PUT',

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Info, Power, RotateCcw, Sparkles, Wallet } from 'lucide-react';
+import { Check, Info, Plus, Power, RotateCcw, Sparkles, Trash2, Wallet } from 'lucide-react';
 import { ChartPanel } from '../components/shared/chart-panel';
 import { ErrorState } from '../components/shared/error-state';
 import { PageHeader } from '../components/shared/page-header';
@@ -20,13 +20,21 @@ import {
   parseInteger,
 } from '../lib/masks';
 import { fidelidadeApi } from '../services/fidelidade';
-import type { ProgramaFidelidade } from '../types/api';
+import type { NivelFidelidade, ProgramaFidelidade } from '../types/api';
 
 const num = new Intl.NumberFormat('pt-BR');
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 
 const DEFAULTS = { valorPorPonto: 1, pontosPorCiclo: 1, ativo: true };
 const SIMULACOES = [20, 50, 100, 200];
+
+/** Mesmo padrão usado no backend quando a empresa nunca configurou o dela
+ *  (ver DEFAULT_NIVEIS em programaFidelidade.service.ts). */
+const NIVEIS_PADRAO: NivelFidelidade[] = [
+  { nome: 'Pãozinho', min: 0 },
+  { nome: 'Baguete', min: 300 },
+  { nome: 'Mestre Padeiro', min: 1200 },
+];
 
 /** Pontos gerados por uma compra — mesma regra do backend (piso por ciclo). */
 function calcularPontos(
@@ -79,6 +87,7 @@ function ProgramaStudio({ programa }: { programa: ProgramaFidelidade }) {
   );
 
   const [form, setForm] = useState(initial);
+  const [niveis, setNiveis] = useState<NivelFidelidade[]>(programa.niveis);
   const [sim, setSim] = useState('50,00');
 
   const patch = (next: Partial<typeof form>) => setForm((c) => ({ ...c, ...next }));
@@ -89,17 +98,21 @@ function ProgramaStudio({ programa }: { programa: ProgramaFidelidade }) {
 
   const valorOk = valorNum > 0;
   const pontosOk = pontosNum > 0;
-  const allValid = valorOk && pontosOk;
+  const niveisOk =
+    niveis.length > 0 && niveis.every((n) => n.nome.trim().length > 0 && n.min >= 0);
+  const allValid = valorOk && pontosOk && niveisOk;
 
   const dirty =
     valorNum !== programa.valorPorPonto ||
     pontosNum !== programa.pontosPorCiclo ||
-    form.ativo !== programa.ativo;
+    form.ativo !== programa.ativo ||
+    JSON.stringify(niveis) !== JSON.stringify(programa.niveis);
 
   const isDefault =
     valorNum === DEFAULTS.valorPorPonto &&
     pontosNum === DEFAULTS.pontosPorCiclo &&
-    form.ativo === DEFAULTS.ativo;
+    form.ativo === DEFAULTS.ativo &&
+    JSON.stringify(niveis) === JSON.stringify(NIVEIS_PADRAO);
 
   const save = useMutation({
     mutationFn: () =>
@@ -107,6 +120,7 @@ function ProgramaStudio({ programa }: { programa: ProgramaFidelidade }) {
         valorPorPonto: valorNum,
         pontosPorCiclo: pontosNum,
         ativo: form.ativo,
+        niveis,
       }),
     onSuccess: (updated) => {
       queryClient.setQueryData(['programa-fidelidade'], updated);
@@ -249,6 +263,75 @@ function ProgramaStudio({ programa }: { programa: ProgramaFidelidade }) {
                 </button>
               </label>
             </Section>
+
+            <Section
+              title="Níveis de fidelidade"
+              hint="Nomes e a partir de quantos pontos acumulados o cliente alcança cada um. Aparece no cartão do app do cliente."
+            >
+              <div className="space-y-2">
+                {niveis.map((nivel, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <Input
+                        aria-label={`Nome do nível ${i + 1}`}
+                        disabled={!podeEditar}
+                        error={nivel.nome.trim().length === 0}
+                        value={nivel.nome}
+                        onChange={(event) =>
+                          setNiveis((cur) =>
+                            cur.map((n, idx) => (idx === i ? { ...n, nome: event.target.value } : n)),
+                          )
+                        }
+                        placeholder="Nome do nível"
+                      />
+                    </div>
+                    <div className="w-28">
+                      <Input
+                        aria-label={`Pontos mínimos do nível ${i + 1}`}
+                        inputMode="numeric"
+                        disabled={!podeEditar}
+                        error={nivel.min < 0}
+                        value={maskInteger(String(nivel.min))}
+                        onChange={(event) =>
+                          setNiveis((cur) =>
+                            cur.map((n, idx) =>
+                              idx === i ? { ...n, min: parseInteger(event.target.value) } : n,
+                            ),
+                          )
+                        }
+                        placeholder="0"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={!podeEditar || niveis.length <= 1}
+                      aria-label={`Remover nível ${i + 1}`}
+                      onClick={() => setNiveis((cur) => cur.filter((_, idx) => idx !== i))}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={!podeEditar || niveis.length >= 10}
+                onClick={() => setNiveis((cur) => [...cur, { nome: '', min: 0 }])}
+              >
+                <Plus className="size-4" />
+                Adicionar nível
+              </Button>
+
+              {!niveisOk ? (
+                <p className="text-xs text-danger-fg">
+                  Cada nível precisa de um nome e de um mínimo de pontos válido (0 ou mais).
+                </p>
+              ) : null}
+            </Section>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3 sm:px-5">
@@ -259,13 +342,14 @@ function ProgramaStudio({ programa }: { programa: ProgramaFidelidade }) {
               type="button"
               variant="ghost"
               disabled={!podeEditar || isDefault}
-              onClick={() =>
+              onClick={() => {
                 setForm({
                   valor: maskCurrencyBRL(String(DEFAULTS.valorPorPonto * 100)),
                   pontos: maskInteger(String(DEFAULTS.pontosPorCiclo)),
                   ativo: DEFAULTS.ativo,
-                })
-              }
+                });
+                setNiveis(NIVEIS_PADRAO);
+              }}
             >
               <RotateCcw className="size-4" />
               Padrão

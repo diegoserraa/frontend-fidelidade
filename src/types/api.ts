@@ -301,4 +301,6 @@ export interface ProgramaFidelidade {
   /** Pontos concedidos a cada ciclo completo. */
   pontosPorCiclo: number;
   ativo: boolean;
+  /** Níveis de fidelidade (nome + pontos mínimos) — configuráveis por empresa. */
+  niveis: NivelFidelidade[];
 }
