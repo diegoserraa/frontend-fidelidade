@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { Croissant } from 'lucide-react';
 import { ApiError } from '../../lib/api';
 import { getErrorMessage } from '../../lib/errors';
@@ -8,6 +9,7 @@ import { cn } from '../../lib/utils';
 import { Field, PasswordField } from '../components/field';
 import { InstallPrompt } from '../components/install-prompt';
 import { useClienteAuth } from '../context/cliente-auth';
+import { appPath } from '../lib/config';
 import { portalApi } from '../services/portal';
 
 type Modo = 'entrar' | 'criar' | 'recuperar';
@@ -16,6 +18,7 @@ export function ClienteLoginPage() {
   const { entrar, criarConta } = useClienteAuth();
   const [modo, setModo] = useState<Modo>('entrar');
   const [form, setForm] = useState({ nome: '', cpf: '', telefone: '', email: '', senha: '' });
+  const [aceitouPrivacidade, setAceitouPrivacidade] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   // Avisa JÁ na tela de cadastro se esse CPF tem conta — em vez de só depois
@@ -46,6 +49,7 @@ export function ClienteLoginPage() {
             senha: form.senha,
             telefone: onlyDigits(form.telefone) || undefined,
             email: form.email.trim() || undefined,
+            aceitouPrivacidade,
           }),
     onError: (err) => {
       // Cadastro é global por CPF (a mesma conta serve pra qualquer padaria,
@@ -76,6 +80,9 @@ export function ClienteLoginPage() {
     const minimo = modo === 'criar' ? 8 : 6;
     if (form.senha.length < minimo) {
       return setErro(`A senha precisa ter pelo menos ${minimo} caracteres.`);
+    }
+    if (modo === 'criar' && !aceitouPrivacidade) {
+      return setErro('Para criar sua conta, aceite a política de privacidade.');
     }
     submit.mutate();
   };
@@ -238,6 +245,24 @@ export function ClienteLoginPage() {
             </button>
           ) : null}
 
+          {modo === 'criar' ? (
+            <label className="flex items-start gap-2.5 text-[13px] leading-relaxed text-fg-muted">
+              <input
+                type="checkbox"
+                checked={aceitouPrivacidade}
+                onChange={(e) => setAceitouPrivacidade(e.target.checked)}
+                className="mt-0.5 size-4 shrink-0 accent-(--brand)"
+              />
+              <span>
+                Li e aceito a{' '}
+                <Link to={appPath('privacidade')} className="font-semibold underline underline-offset-2">
+                  política de privacidade
+                </Link>
+                .
+              </span>
+            </label>
+          ) : null}
+
           {erro ? (
             <p
               role="alert"
@@ -264,7 +289,11 @@ export function ClienteLoginPage() {
 
         <p className="mx-auto mt-auto max-w-sm pt-8 text-center text-[12px] leading-relaxed text-fg-subtle">
           Ao continuar, você concorda que usamos seu nome e CPF para identificar sua conta e seus
-          pontos.
+          pontos. Veja a{' '}
+          <Link to={appPath('privacidade')} className="underline underline-offset-2">
+            política de privacidade
+          </Link>
+          .
         </p>
       </div>
     </div>

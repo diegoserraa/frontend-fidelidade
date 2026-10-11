@@ -21,7 +21,14 @@ export const portalApi = {
   // sessão única no backend ser por PADARIA, não global — senão logar no
   // app de uma padaria derrubaria a sessão já aberta no de outra, mesmo
   // sendo o mesmo aparelho/pessoa (ver clienteAuth.service.ts).
-  registrar: (input: { nome: string; cpf: string; senha: string; telefone?: string; email?: string }) =>
+  registrar: (input: {
+    nome: string;
+    cpf: string;
+    senha: string;
+    telefone?: string;
+    email?: string;
+    aceitouPrivacidade: boolean;
+  }) =>
     clienteRequest<ClienteLoginResponse>('/auth/cliente/registrar', {
       method: 'POST',
       body: JSON.stringify({ ...input, empresaId: EMPRESA_ID }),

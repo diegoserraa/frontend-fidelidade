@@ -29,6 +29,7 @@ interface ClienteAuthValue {
     senha: string;
     telefone?: string;
     email?: string;
+    aceitouPrivacidade: boolean;
   }) => Promise<void>;
   redefinirSenha: (input: { token: string; novaSenha: string }) => Promise<void>;
   sair: () => void;
@@ -134,7 +135,14 @@ export function ClienteAuthProvider({ children }: { children: ReactNode }) {
   );
 
   const criarConta = useCallback(
-    async (input: { nome: string; cpf: string; senha: string; telefone?: string; email?: string }) => {
+    async (input: {
+      nome: string;
+      cpf: string;
+      senha: string;
+      telefone?: string;
+      email?: string;
+      aceitouPrivacidade: boolean;
+    }) => {
       aplicarSessao(await portalApi.registrar(input));
     },
     [aplicarSessao],

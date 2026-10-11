@@ -13,6 +13,7 @@ import { ExtratoPage } from './pages/extrato';
 import { PerfilPage } from './pages/perfil';
 import { ResgatePage } from './pages/resgate';
 import { RedefinirSenhaPage } from './pages/redefinir-senha';
+import { PrivacidadePage } from './pages/privacidade';
 import { appPath } from './lib/config';
 
 function TabbedLayout() {
@@ -78,6 +79,7 @@ export default function ClienteApp() {
         {/* Fora do "gate" de autenticação de propósito: o link de e-mail tem
          *  que funcionar tanto deslogado quanto logado. */}
         <Route path="redefinir-senha" element={<RedefinirSenhaPage />} />
+        <Route path="privacidade" element={<PrivacidadePage />} />
         <Route path="*" element={<Gate />} />
       </Routes>
     </ClienteAuthProvider>
