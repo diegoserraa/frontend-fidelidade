@@ -167,7 +167,13 @@
           var link = document.querySelector('link[rel="manifest"]');
           if (!link) return;
           var empresaIdAtual = window.__empresaIdAtual;
-          var url = '%VITE_API_URL%/manifest' + (empresaIdAtual ? '?empresa=' + encodeURIComponent(empresaIdAtual) : '');
+          // location.origin, não %VITE_API_URL% (fixado no build, preso ao
+          // domínio de quando a imagem foi construída) — o app pode ser
+          // acessado por mais de um domínio/subdomínio (ex.: o antigo e o
+          // novo, ou o subdomínio de uma padaria), e a API responde em
+          // qualquer um deles. Usar a origem atual mantém isso certo sem
+          // precisar rebuildar a cada domínio novo.
+          var url = location.origin + '/api/manifest' + (empresaIdAtual ? '?empresa=' + encodeURIComponent(empresaIdAtual) : '');
           link.setAttribute('href', url);
           link.setAttribute('crossorigin', 'anonymous');
         } catch (e) {}
