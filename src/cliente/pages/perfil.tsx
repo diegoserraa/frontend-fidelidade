@@ -161,29 +161,39 @@ export function PerfilPage() {
         {empresa ? <NotificacoesToggle empresa={empresa} /> : null}
         <InstallPrompt />
 
-        <button
-          type="button"
-          onClick={sair}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border-strong bg-surface text-[14px] font-semibold text-fg"
-        >
-          <LogOut className="size-4" />
-          Sair da conta
-        </button>
+        <div className="flex flex-col gap-1.5">
+          <button
+            type="button"
+            onClick={sair}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-border-strong bg-surface text-[14px] font-semibold text-fg"
+          >
+            <LogOut className="size-4" />
+            Sair da conta
+          </button>
+          <p className="text-center text-[12px] text-fg-subtle">
+            Só desconecta deste aparelho — seus pontos e dados continuam salvos, você pode entrar de
+            novo quando quiser.
+          </p>
+        </div>
 
+        {/* "Apagar", nunca "Sair" — essa ação apaga dados de verdade, o botão
+            de cima já usa "Sair" pro logout simples; com as duas frases
+            parecidas ("Sair da conta" / "Sair de [padaria]") dava pra
+            confundir uma ação reversível com uma destrutiva. */}
         <button
           type="button"
           onClick={() => setConfirmarExclusao(true)}
           className="mx-auto inline-flex items-center gap-1.5 py-1.5 text-[13px] font-semibold text-danger-fg"
         >
           <Trash2 className="size-3.5" />
-          {ultimaPadaria ? 'Excluir minha conta' : `Sair de ${empresa?.nome ?? 'esta padaria'}`}
+          {ultimaPadaria ? 'Excluir minha conta' : `Apagar meus dados em ${empresa?.nome ?? 'esta padaria'}`}
         </button>
       </div>
 
       <ConfirmDialog
         open={confirmarExclusao}
         onOpenChange={setConfirmarExclusao}
-        title={ultimaPadaria ? 'Excluir minha conta' : `Sair de ${empresa?.nome ?? 'esta padaria'}`}
+        title={ultimaPadaria ? 'Excluir minha conta' : `Apagar meus dados em ${empresa?.nome ?? 'esta padaria'}`}
         description={
           ultimaPadaria
             ? 'Sua conta e todo o histórico de pontos serão apagados para sempre. Não dá para desfazer.'
