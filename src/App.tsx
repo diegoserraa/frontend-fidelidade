@@ -11,6 +11,15 @@ import { useBrandThemeInit } from './hooks/use-theme';
 
 const ClienteApp = lazy(() => import('./cliente/ClienteApp'));
 const AdminApp = lazy(() => import('./admin/AdminApp'));
+const RedefinirSenhaPage = lazy(() =>
+  import('./cliente/pages/redefinir-senha').then((m) => ({ default: m.RedefinirSenhaPage })),
+);
+const PrivacidadePage = lazy(() =>
+  import('./cliente/pages/privacidade').then((m) => ({ default: m.PrivacidadePage })),
+);
+const ClienteAuthProviderLazy = lazy(() =>
+  import('./cliente/context/cliente-auth').then((m) => ({ default: m.ClienteAuthProvider })),
+);
 const LoginPage = lazy(() => import('./pages/login').then((m) => ({ default: m.LoginPage })));
 const DashboardPage = lazy(() =>
   import('./pages/dashboard').then((m) => ({ default: m.DashboardPage })),
@@ -78,6 +87,26 @@ function AppRoutes() {
             como o mesmo site e passa a abrir a segunda padaria escaneada
             dentro do ícone já instalado da primeira, em vez de oferecer uma
             instalação separada. */}
+        {/* Rotas explícitas ANTES das genéricas abaixo: sem isso, o React
+            Router prefere "/app/:empresaId/*" pra URLs tipo
+            "/app/redefinir-senha" (interpreta "redefinir-senha" como se
+            fosse um empresaId, por ter um segmento a mais que "/app/*" antes
+            do catch-all) e cai direto na tela de login — quem clica no link
+            de redefinição de senha do e-mail (que SEMPRE usa a forma sem
+            empresaId, ver clienteAuth.service.ts) nunca via a tela certa.
+            Só cobre a forma "pelada" (sem empresaId): com empresaId prefixado
+            (ex.: instalado numa padaria específica), o /app/:empresaId/*
+            de baixo já resolve certo, porque aí o "sobra" bate com a rota
+            interna em ClienteApp.tsx. */}
+        <Route
+          path="/app/redefinir-senha"
+          element={
+            <ClienteAuthProviderLazy>
+              <RedefinirSenhaPage />
+            </ClienteAuthProviderLazy>
+          }
+        />
+        <Route path="/app/privacidade" element={<PrivacidadePage />} />
         <Route path="/app/*" element={<ClienteApp />} />
         <Route path="/app/:empresaId/*" element={<ClienteApp />} />
         {/* Área do dono da plataforma (cadastro de empresas) — auth própria */}
